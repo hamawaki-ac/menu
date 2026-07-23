@@ -557,6 +557,7 @@ html,body{max-width:100%;overflow-x:hidden}
     display:block!important;
     position:static!important;
     width:198mm!important;
+    min-width:198mm!important;
     max-width:198mm!important;
     margin:0 auto!important;
     padding:0!important;
@@ -597,8 +598,10 @@ html,body{max-width:100%;overflow-x:hidden}
   #printRoot .print-page-inner{
     position:absolute!important;
     left:0!important;
+    right:0!important;
     top:0!important;
     width:100%!important;
+    max-width:none!important;
     margin:0!important;
     padding:0!important;
     transform-origin:top left!important;
@@ -1120,14 +1123,16 @@ function fitPrintPageToA4(page){
  void inner.offsetHeight;
 
  const maxH=mmToPx(279); // safety margin inside 284 mm physical page
- const maxW=mmToPx(196);
  const h=Math.max(inner.scrollHeight,1);
- const w=Math.max(inner.scrollWidth,1);
 
- let scale=Math.min(1,maxH/h,maxW/w);
+ // Use the full A4 printable width at all times.
+ // Only reduce content when its HEIGHT would exceed one sheet.
+ let scale=Math.min(1,maxH/h);
  scale=Math.max(0.34,Math.floor(scale*1000)/1000);
 
  inner.style.setProperty("--content-scale",String(scale));
+ // Compensate the scaled width so the visible result still fills the sheet.
+ inner.style.width=(100/scale)+"%";
  page.dataset.printScale=String(scale);
 }
 function prepareOnePagePrint(){

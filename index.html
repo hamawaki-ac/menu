@@ -318,23 +318,51 @@ input:focus,select:focus,textarea:focus{
   padding:12px;border-radius:14px;background:#f7fbf9;border:1px solid var(--line)
 }
 .empty{padding:18px;text-align:center;color:#98a2b3;border:1px dashed #c7d6d1;border-radius:12px;background:#fbfdfc}
+.week-toolbar{
+  display:grid;
+  grid-template-columns:auto minmax(330px,1fr) auto;
+  align-items:center;
+  gap:12px;
+  margin-bottom:14px;
+}
+.week-nav-group{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.week-nav-right{justify-content:flex-end}
+.week-picker{
+  display:grid;
+  grid-template-columns:auto minmax(145px,180px) minmax(190px,1fr);
+  align-items:center;
+  gap:9px;
+  margin:0;
+  padding:8px 11px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:linear-gradient(135deg,#f7fcfa,#edf8f4);
+}
+.week-picker-label{font-size:12px;font-weight:900;color:#35534a;white-space:nowrap}
+.week-picker input{min-width:0;padding:8px 9px}
+.week-picker strong{text-align:center;color:#173f34;font-size:14px;white-space:nowrap}
 .week-wrap{
-  overflow:auto;max-height:calc(100vh - 205px);
+  overflow-x:hidden;overflow-y:auto;max-height:calc(100vh - 230px);
   border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:var(--shadow-sm)
 }
-.week{border-collapse:separate;border-spacing:0;min-width:1450px;width:100%}
-.week th,.week td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px;vertical-align:top}
+.week{border-collapse:separate;border-spacing:0;width:100%;table-layout:fixed;min-width:0}
+.week th,.week td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:5px;vertical-align:top;min-width:0}
 .week thead th{
   position:sticky;top:0;z-index:5;background:linear-gradient(180deg,#f0fcf7,#e7f8f1);
-  min-width:180px;color:#245548
+  width:calc((100% - 138px)/7);color:#245548;font-size:11px
 }
-.week thead th:first-child{left:0;z-index:7}
+.week thead th:first-child{left:0;z-index:7;width:138px}
+.week thead th input{padding:6px 5px;font-size:10px;min-width:0}
 .week tbody th{
-  position:sticky;left:0;z-index:4;min-width:190px;
+  position:sticky;left:0;z-index:4;width:138px;
   background:linear-gradient(90deg,var(--soft),#fff);
-  color:var(--cat);border-left:7px solid var(--cat);font-weight:900
+  color:var(--cat);border-left:5px solid var(--cat);font-weight:900;font-size:11px;line-height:1.35
 }
-.weekcell{min-height:108px}
+.weekcell{min-height:94px;min-width:0}
+.weekcell .picker{grid-template-columns:minmax(0,1fr) auto;gap:4px;padding:4px}
+.weekcell .picker select{padding:6px 4px;font-size:10px;min-width:0;width:100%}
+.weekcell .picker .btn{padding:6px 5px;font-size:10px}
+.weekitem{font-size:10px;padding:5px 5px;word-break:break-word}
 .weekitem{
   display:grid;grid-template-columns:1fr auto;gap:5px;
   background:linear-gradient(90deg,var(--soft),#fff);
@@ -362,7 +390,14 @@ input:focus,select:focus,textarea:focus{
   .grid2,.builder{grid-template-columns:1fr}
   .sticky{position:static}
   .filters{grid-template-columns:1fr}
-  .week-wrap{max-height:none}
+  .week-toolbar{grid-template-columns:1fr;gap:9px}
+  .week-nav-group,.week-nav-right{justify-content:space-between}
+  .week-picker{grid-template-columns:1fr;gap:5px}
+  .week-picker strong{text-align:left;white-space:normal}
+  .week-wrap{max-height:none;overflow-x:auto}
+  .week{min-width:1120px;table-layout:fixed}
+  .week thead th{width:140px;min-width:140px}
+  .week thead th:first-child,.week tbody th{width:150px;min-width:150px}
   .menu{grid-template-columns:38px minmax(0,1fr)}
   .menu-rail{font-size:11px;min-height:118px}
   main{padding:15px 12px 28px}
@@ -560,7 +595,7 @@ html,body{max-width:100%;overflow-x:hidden}
  </div>
  <nav>
   <button class="active" data-view="today">今日・一覧</button>
-  <button data-view="daily">日別作成</button>
+  <button data-view="daily">1日入力</button>
   <button data-view="weekly">週間入力</button>
   <button data-view="menus">メニュー管理</button>
  </nav>
@@ -590,10 +625,20 @@ html,body{max-width:100%;overflow-x:hidden}
 
 <section id="v-weekly" class="view">
  <div class="panel">
-  <div class="toolbar no-print">
-   <button id="prevWeek" class="btn secondary">←前の週</button>
-   <div class="actions"><button id="thisWeek" class="btn secondary">今週</button><input id="weekDate" type="date" style="width:auto"><strong id="weekTitle"></strong></div>
-   <div class="actions"><button id="saveWeek" class="btn primary">1週間を保存</button><button id="nextWeek" class="btn secondary">次の週→</button></div>
+  <div class="week-toolbar no-print">
+   <div class="week-nav-group">
+    <button id="prevWeek" class="btn secondary">← 前の週</button>
+    <button id="thisWeek" class="btn secondary">今週</button>
+   </div>
+   <label class="week-picker" for="weekDate">
+    <span class="week-picker-label">週を選択</span>
+    <input id="weekDate" type="date">
+    <strong id="weekTitle"></strong>
+   </label>
+   <div class="week-nav-group week-nav-right">
+    <button id="saveWeek" class="btn primary">1週間を保存</button>
+    <button id="nextWeek" class="btn secondary">次の週 →</button>
+   </div>
   </div>
   <div class="week-wrap"><table class="week"><thead id="weekHead"></thead><tbody id="weekBody"></tbody></table></div>
  </div>
@@ -865,7 +910,10 @@ window.deleteMenu=async id=>{if(!canEditApp())return alert("閲覧専用アカ�
 
 function loadWeek(){weekDraft={};for(let i=0;i<7;i++){const d=addDays(weekStart,i);weekDraft[d]=days[d]?structuredClone(days[d]):blankDay()}}
 function renderWeek(){
- const dates=Array.from({length:7},(_,i)=>addDays(weekStart,i));el("weekDate").value=weekStart;el("weekTitle").textContent=`${dates[0]} ～ ${dates[6]}`;
+ weekStart=getMonday(weekStart);
+ const dates=Array.from({length:7},(_,i)=>addDays(weekStart,i));
+ el("weekDate").value=weekStart;
+ el("weekTitle").textContent=`${dates[0]} ～ ${dates[6]}（月〜日）`;
  el("weekHead").innerHTML=`<tr><th>区分</th>${dates.map(d=>`<th>${new Date(d+"T00:00:00").toLocaleDateString("ja-JP",{month:"numeric",day:"numeric",weekday:"short"})}<input value="${esc(weekDraft[d].theme||"")}" placeholder="テーマ" onchange="setWeekTheme('${d}',this.value)" style="margin-top:5px;font-size:12px"></th>`).join("")}</tr>`;
  el("weekBody").innerHTML=SECTIONS.map(s=>`<tr><th class="${cls(s.cat)}">${esc(s.label)}</th>${dates.map(d=>{const ids=weekDraft[d].sections[s.id]||[];return `<td><div class="weekcell ${cls(s.cat)}"><div class="picker"><select id="w-${d}-${s.id}">${optionHTML(s)}</select><button class="btn primary small" onclick="addWeek('${d}','${s.id}')">追加</button></div>${ids.map((id,i)=>{const m=menus.find(x=>x.id===id);return m?`<div class="weekitem ${cls(m.category)}"><span>${esc(m.name)}</span><button class="x" onclick="removeWeek('${d}','${s.id}',${i})">×</button></div>`:""}).join("")}</div></td>`}).join("")}</tr>`).join("")
 }

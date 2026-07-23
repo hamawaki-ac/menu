@@ -528,61 +528,62 @@ html,body{max-width:100%;overflow-x:hidden}
 .print-prep .muted{font-size:5.8pt!important;margin-top:.7mm!important}
 
 @page{size:A4 portrait;margin:7mm}
-@media print{
-  html,body{
-    width:210mm!important;
-    height:297mm!important;
-    margin:0!important;
-    padding:0!important;
-    overflow:hidden!important;
-    background:#fff!important;
-    -webkit-print-color-adjust:exact!important;
-    print-color-adjust:exact!important;
-  }
-  body{min-height:0!important}
-  header,.login,.no-print,nav,#dayList,#enteredDaysPanel{display:none!important}
-  main{
-    width:196mm!important;
-    max-width:196mm!important;
-    height:283mm!important;
-    margin:0 auto!important;
-    padding:0!important;
-    overflow:hidden!important;
-  }
-  .view{display:none!important}
-  #v-today.print{
-    display:block!important;
-    width:196mm!important;
-    height:283mm!important;
-    overflow:hidden!important;
-    page-break-after:avoid!important;
-    break-after:avoid-page!important;
-  }
-  #v-today.print>.panel:first-child{
-    display:block!important;
-    width:196mm!important;
-    height:283mm!important;
-    margin:0!important;
-    padding:0!important;
-    border:0!important;
-    border-radius:0!important;
-    box-shadow:none!important;
-    background:#fff!important;
-    overflow:hidden!important;
-  }
-  #todayContent{
-    width:196mm!important;
-    margin:0 auto!important;
-    zoom:var(--print-scale,1)!important;
-    transform:none!important;
-    page-break-inside:avoid!important;
-    break-inside:avoid-page!important;
-  }
-  a[href]::after{content:none!important}
-}
+
 
 </style>
 
+
+<style id="final-print-style">
+@page{size:A4 portrait;margin:7mm;}
+@media print{
+  html,body{
+    width:210mm!important;
+    min-height:0!important;
+    height:auto!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:visible!important;
+    background:#fff!important;
+  }
+  body *{visibility:hidden!important;}
+  #printArea,#printArea *{visibility:visible!important;}
+  #printArea{
+    position:static!important;
+    display:block!important;
+    width:196mm!important;
+    max-width:196mm!important;
+    min-height:0!important;
+    height:auto!important;
+    margin:0 auto!important;
+    padding:0!important;
+    overflow:visible!important;
+    page-break-before:avoid!important;
+    page-break-after:avoid!important;
+    break-before:avoid-page!important;
+    break-after:avoid-page!important;
+    transform:none!important;
+  }
+  #printArea .panel,
+  #printArea .today-major,
+  #printArea .today-subsection,
+  #printArea .today-menu-row{
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+  header,nav,.no-print,.login,#createdList,.created-list,.actions,button{display:none!important;}
+  #printArea .panel{box-shadow:none!important;margin:0!important;padding:0!important;border:0!important;}
+  #printArea .today-board{gap:4px!important;margin-top:4px!important;}
+  #printArea .today-major-body{padding:4px!important;gap:4px!important;}
+  #printArea .today-subitems{padding:3px!important;gap:3px!important;}
+  #printArea .today-menu-row{padding:4px 5px!important;font-size:9pt!important;}
+  #printArea h1,#printArea h2,#printArea h3,#printArea p{margin-top:2px!important;margin-bottom:2px!important;}
+  #printArea .today-major-title{padding:6px 8px!important;font-size:12pt!important;}
+  #printArea .today-subtitle{padding:4px 6px!important;font-size:10pt!important;}
+  #printArea .today-summary{margin:3px 0!important;gap:3px!important;}
+  #printArea .today-summary span{padding:2px 5px!important;font-size:8pt!important;}
+  #printArea .notice{margin-top:4px!important;padding:4px 6px!important;}
+}
+</style>
 </head>
 <body>
 <div id="login" class="login hidden">

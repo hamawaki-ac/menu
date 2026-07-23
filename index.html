@@ -874,8 +874,8 @@ el("copyPrev").onclick=()=>{const d=addDays(el("dailyDate").value,-1);if(!days[d
 function dayHTML(date,day){
  if(!day)return `<div class="empty">${fmt(date)}は未作成です</div>`;
 
- const overallIds=["beforeOverall","beforeStrength","mainOverall","afterStrength","afterOverall"];
- const eventIds=["drill","sprint","hurdle","jump","throw","distance","middleStrength"];
+ const overallIds=["beforeOverall","beforeStrength","drill","mainOverall","afterStrength","afterOverall"];
+ const eventIds=["sprint","hurdle","jump","throw","distance","middleStrength"];
 
  function renderSubsection(section){
   if(!section) return "";
@@ -967,8 +967,8 @@ function dayHasContent(day){
  return SECTIONS.some(s=>(day.sections?.[s.id]||[]).length>0);
 }
 function compactDayCard(date,day){
- const overallIds=["beforeOverall","beforeStrength","mainOverall","afterStrength","afterOverall"];
- const eventIds=["drill","sprint","hurdle","jump","throw","distance","middleStrength"];
+ const overallIds=["beforeOverall","beforeStrength","drill","mainOverall","afterStrength","afterOverall"];
+ const eventIds=["sprint","hurdle","jump","throw","distance","middleStrength"];
  function names(ids){return ids.flatMap(id=>(day.sections?.[id]||[]).map(mid=>menus.find(m=>m.id===mid)?.name).filter(Boolean))}
  const overall=names(overallIds),events=names(eventIds);
  return `<article class="entered-day-card">

@@ -766,6 +766,28 @@ header,
 }
 </style>
 
+
+<style id="today-print-toolbar-no-gradient">
+/* 今日・一覧：日付／この日を編集／印刷 の帯はグラデーションなし */
+.today-toolbar,
+.today-head,
+.today-header-actions,
+.today-date-actions,
+.today-controls,
+.day-toolbar {
+  background: #fff !important;
+  background-image: none !important;
+}
+
+/* 既存構造で上記クラスが付いていない場合の実要素 */
+#todayView .card > div:has(input[type="date"]):has(button),
+#todayPanel .card > div:has(input[type="date"]):has(button),
+[data-view="today"] .card > div:has(input[type="date"]):has(button) {
+  background: #fff !important;
+  background-image: none !important;
+}
+</style>
+
 </head>
 <body>
 <div id="login" class="login hidden">
@@ -1132,7 +1154,7 @@ function fitPrintPageToA4(page){
 
  inner.style.setProperty("--content-scale",String(scale));
  // Compensate the scaled width so the visible result still fills the sheet.
- inner.style.width=(100/scale)+"%";
+ inner.style.setProperty("width",(100/scale)+"%","important");
  page.dataset.printScale=String(scale);
 }
 function prepareOnePagePrint(){

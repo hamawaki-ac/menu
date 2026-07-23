@@ -532,6 +532,10 @@ html,body{max-width:100%;overflow-x:hidden}
 @page{size:A4 portrait;margin:7mm}
 
 
+
+.today-menu-caution{display:block;margin-top:5px;font-size:.9em;line-height:1.45;color:#8a3b12}
+.entered-caution{display:block;margin-top:2px;line-height:1.4;color:#8a3b12}
+@media print{.today-menu-caution{font-size:9pt!important;color:#333!important}.entered-caution{color:#333!important}}
 </style>
 
 
@@ -890,6 +894,7 @@ function dayHTML(date,day){
     <div>
      <strong>${esc(m.name)}</strong>
      ${detail?`<small>${esc(detail)}</small>`:""}
+     ${m.caution?`<small class="today-menu-caution"><b>注意点：</b>${esc(m.caution)}</small>`:""}
     </div>
     ${m.duration?`<span class="today-menu-time">${esc(m.duration)}</span>`:""}
    </div>`;
@@ -969,13 +974,18 @@ function dayHasContent(day){
 function compactDayCard(date,day){
  const overallIds=["beforeOverall","beforeStrength","drill","mainOverall","afterStrength","afterOverall"];
  const eventIds=["sprint","hurdle","jump","throw","distance","middleStrength"];
- function names(ids){return ids.flatMap(id=>(day.sections?.[id]||[]).map(mid=>menus.find(m=>m.id===mid)?.name).filter(Boolean))}
- const overall=names(overallIds),events=names(eventIds);
+ function menuItems(ids){
+  return ids.flatMap(id=>(day.sections?.[id]||[]).map(mid=>menus.find(m=>m.id===mid)).filter(Boolean));
+ }
+ function compactItems(items){
+  return items.map(m=>`<li><span>${esc(m.name)}</span>${m.caution?`<small class="entered-caution"><b>注意点：</b>${esc(m.caution)}</small>`:""}</li>`).join("");
+ }
+ const overall=menuItems(overallIds),events=menuItems(eventIds);
  return `<article class="entered-day-card">
   <div class="toolbar"><div><h3>${fmt(date)}</h3>${day.theme?`<div><b>テーマ：</b>${esc(day.theme)}</div>`:""}</div><div class="actions"><button class="btn secondary small" onclick="showTodayDate('${date}')">表示</button><button class="btn secondary small viewer-hide" onclick="openDay('${date}')">編集</button></div></div>
   <div class="entered-day-groups">
-   <div class="entered-day-group"><strong>全体練習</strong>${overall.length?`<ul>${overall.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`:`<span class="muted">なし</span>`}</div>
-   <div class="entered-day-group"><strong>各種目練習</strong>${events.length?`<ul>${events.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`:`<span class="muted">なし</span>`}</div>
+   <div class="entered-day-group"><strong>全体練習</strong>${overall.length?`<ul>${compactItems(overall)}</ul>`:`<span class="muted">なし</span>`}</div>
+   <div class="entered-day-group"><strong>各種目練習</strong>${events.length?`<ul>${compactItems(events)}</ul>`:`<span class="muted">なし</span>`}</div>
   </div>
  </article>`;
 }

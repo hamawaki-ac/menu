@@ -583,7 +583,8 @@ html,body{max-width:100%;overflow-x:hidden}
     border-bottom:1.5px solid #111;
   }
   #printRoot .panel{box-shadow:none!important;border:0!important;margin:0!important;padding:0!important;}
-  #printRoot .today-board{gap:6px!important;margin-top:6px!important;}
+  #printRoot .today-board{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;align-items:start!important;gap:6px!important;margin-top:6px!important;}
+  #printRoot .today-major{min-width:0!important;}
   #printRoot .today-major{box-shadow:none!important;margin:0!important;break-inside:avoid!important;page-break-inside:avoid!important;}
   #printRoot .today-major-title{padding:8px 10px!important;font-size:13pt!important;}
   #printRoot .today-major-body{padding:6px!important;gap:5px!important;}
@@ -962,9 +963,8 @@ function fitPrintRootToOneA4Page(root){
  const naturalHeight=root.scrollHeight;
  const naturalWidth=root.scrollWidth;
  let scale=Math.min(1, printableHeight/naturalHeight, printableWidth/naturalWidth);
- // 1日分を必ず1ページに収める。
- // 内容が多い日は必要な分だけ自動縮小する。
- scale=Math.max(0.1, Math.floor(scale*1000)/1000);
+ // 極端な縮小を避けつつ、必ず1日分を1ページに収める。
+ scale=Math.max(0.48, Math.floor(scale*1000)/1000);
  root.style.setProperty("--one-page-scale",String(scale));
  root.dataset.printScale=String(scale);
 }
@@ -976,6 +976,10 @@ function prepareOnePagePrint(){
  const root=document.createElement("div");
  root.id="printRoot";
  root.innerHTML=`<div class="print-sheet-title">浜脇AC｜トレーニングメニュー</div><div class="panel">${content.innerHTML}</div>`;
+ // 印刷時は左列を全体メニュー、右列を専門メニューとして固定表示する。
+ const printMajors=root.querySelectorAll(".today-major-title > span:first-child");
+ if(printMajors[0]) printMajors[0].textContent="全体メニュー";
+ if(printMajors[1]) printMajors[1].textContent="専門メニュー";
  root.style.position="absolute";
  root.style.left="-10000px";
  root.style.top="0";
@@ -1029,11 +1033,7 @@ el("editDay").onclick=()=>openDay(el("todayDate").value);el("todayDate").onchang
  prepareOnePagePrint();
  setTimeout(()=>window.print(),120);
 };
-window.addEventListener("beforeprint",()=>{
- if(!document.getElementById("printRoot"))prepareOnePagePrint();
- const root=document.getElementById("printRoot");
- if(root)fitPrintRootToOneA4Page(root);
-});
+window.addEventListener("beforeprint",()=>{if(!document.getElementById("printRoot"))prepareOnePagePrint()});
 window.addEventListener("afterprint",cleanupOnePagePrint);
 
 function renderMenus(){

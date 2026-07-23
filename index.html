@@ -558,11 +558,31 @@ html,body{max-width:100%;overflow-x:hidden}
     margin:0 auto!important; padding:0!important; overflow:visible!important; background:#fff!important; color:#111!important;
   }
   #printRoot .print-page{
-    display:block!important; width:198mm!important; max-width:198mm!important; min-height:0!important;
-    margin:0 auto!important; padding:0!important; box-sizing:border-box!important;
-    zoom:var(--page-scale,1)!important; transform-origin:top center!important;
-    break-after:page!important; page-break-after:always!important;
-    -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important;
+    display:block!important;
+    position:relative!important;
+    width:198mm!important;
+    max-width:198mm!important;
+    height:285mm!important;
+    min-height:285mm!important;
+    max-height:285mm!important;
+    margin:0 auto!important;
+    padding:0!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+    zoom:1!important;
+    transform:none!important;
+    break-after:page!important;
+    page-break-after:always!important;
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+    -webkit-print-color-adjust:exact!important;
+    print-color-adjust:exact!important;
+  }
+  #printRoot .print-page-inner{
+    display:block!important;
+    width:100%!important;
+    transform-origin:top left!important;
+    transform:scale(var(--content-scale,1))!important;
   }
   #printRoot .print-page:last-child{break-after:auto!important;page-break-after:auto!important;}
   #printRoot *{
@@ -599,6 +619,45 @@ html,body{max-width:100%;overflow-x:hidden}
   #printRoot button,#printRoot .actions,#printRoot .no-print{display:none!important;}
 }
 </style>
+
+<style id="hamawaki-global-gradient-override">
+:root {
+  --hamawaki-gradient: linear-gradient(90deg,#38bdf8 0%,#0ea5e9 24%,#22c55e 64%,#facc15 100%);
+}
+/* 全ページ共通のヘッダー・上部バー */
+header,
+.app-header,
+.topbar,
+.top-bar,
+.page-header,
+.main-header,
+.brand-header,
+.navbar,
+.nav-bar,
+.toolbar,
+.header-bar {
+  background: var(--hamawaki-gradient) !important;
+  background-image: var(--hamawaki-gradient) !important;
+}
+/* ページごとのタイトル帯 */
+.view-title,
+.page-title-bar,
+.section-title.main-title,
+.panel-title.main-title {
+  background: var(--hamawaki-gradient) !important;
+  background-image: var(--hamawaki-gradient) !important;
+}
+/* 印刷タイトルも同じ配色 */
+@media print {
+  .print-sheet-title {
+    background: var(--hamawaki-gradient) !important;
+    background-image: var(--hamawaki-gradient) !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div id="login" class="login hidden">
@@ -947,17 +1006,20 @@ function mmToPx(mm){
  return px;
 }
 function fitPrintPageToA4(page){
- // 各ページをA4縦1ページに収める。内容が多い場合だけ縮小する。
- const printableHeight=mmToPx(283);
+ const inner=page.querySelector(".print-page-inner");
+ if(!inner)return;
+ const printableHeight=mmToPx(284);
  const printableWidth=mmToPx(198);
- page.style.setProperty("--page-scale","1");
- page.style.zoom="1";
- void page.offsetHeight;
- const naturalHeight=page.scrollHeight;
- const naturalWidth=page.scrollWidth;
+ inner.style.setProperty("--content-scale","1");
+ inner.style.width="100%";
+ void inner.offsetHeight;
+ const naturalHeight=inner.scrollHeight;
+ const naturalWidth=inner.scrollWidth;
  let scale=Math.min(1, printableHeight/naturalHeight, printableWidth/naturalWidth);
- scale=Math.max(0.48, Math.floor(scale*1000)/1000);
- page.style.setProperty("--page-scale",String(scale));
+ scale=Math.max(0.42, Math.floor(scale*1000)/1000);
+ inner.style.setProperty("--content-scale",String(scale));
+ // Scaling the inner wrapper prevents one logical page from spilling onto a second sheet.
+ if(scale<1) inner.style.width=(100/scale)+"%";
  page.dataset.printScale=String(scale);
 }
 function prepareOnePagePrint(){
@@ -978,13 +1040,14 @@ function prepareOnePagePrint(){
   const copy=major.cloneNode(true);
   const title=copy.querySelector(".today-major-title > span:first-child");
   if(title)title.textContent=index===0?"全体練習":"専門練習";
-  page.innerHTML=`<div class="print-sheet-title">浜脇AC｜トレーニングメニュー</div>${headerParts.join("")}<div class="today-board">${copy.outerHTML}</div>`;
+  page.innerHTML=`<div class="print-page-inner"><div class="print-sheet-title">浜脇AC｜トレーニングメニュー</div>${headerParts.join("")}<div class="today-board">${copy.outerHTML}</div></div>`;
   // 連絡事項と最終更新は2ページ目の末尾にまとめる。
   if(index===1){
    const notice=source.querySelector(":scope > .notice");
    const muted=source.querySelector(":scope > p.muted");
-   if(notice)page.insertAdjacentHTML("beforeend",notice.outerHTML);
-   if(muted)page.insertAdjacentHTML("beforeend",muted.outerHTML);
+   const inner=page.querySelector(".print-page-inner");
+   if(notice)inner.insertAdjacentHTML("beforeend",notice.outerHTML);
+   if(muted)inner.insertAdjacentHTML("beforeend",muted.outerHTML);
   }
   return page;
  };

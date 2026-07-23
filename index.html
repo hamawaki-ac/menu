@@ -62,7 +62,7 @@ h1{font-size:22px;margin:0;font-weight:900;letter-spacing:.04em;text-shadow:0 2p
 .dot.online{background:#86efac;box-shadow:0 0 0 4px rgba(134,239,172,.14)}
 .dot.offline{background:#fca5a5;box-shadow:0 0 0 4px rgba(252,165,165,.14)}
 nav{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;
+  display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px;
   padding:5px;border-radius:15px;background:rgba(255,255,255,.08)
 }
 nav button{
@@ -386,6 +386,27 @@ input:focus,select:focus,textarea:focus{
 }
 .loginbox h2{margin:0 0 6px;font-size:24px}
 .muted{color:var(--muted)}
+
+.entered-days-list{display:grid;gap:14px}
+.entered-day-card{border:1px solid var(--line);border-radius:16px;padding:15px;background:#fff;box-shadow:var(--shadow-sm)}
+.entered-day-card h3{margin:0 0 8px;font-size:17px}
+.entered-day-groups{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.entered-day-group{border:1px solid #dce8e3;border-radius:11px;padding:10px;background:#f9fcfb}
+.entered-day-group strong{display:block;margin-bottom:5px;color:#255548}
+.entered-day-group ul{margin:0;padding-left:18px;font-size:13px;line-height:1.6}
+.month-toolbar{display:grid;grid-template-columns:auto minmax(330px,1fr) auto;gap:12px;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.month-nav-group{display:flex;gap:8px;align-items:center}.month-nav-right{justify-content:flex-end}
+.month-picker{display:grid;grid-template-columns:auto 160px minmax(180px,1fr);gap:9px;align-items:center;margin:0;padding:7px 10px;border:1px solid var(--line);border-radius:13px;background:#f2faf7}
+.month-picker span{font-size:12px;font-weight:900}.month-picker input{padding:8px}.month-picker strong{text-align:center;color:#234f43}
+.month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}
+.month-weekday{padding:8px;text-align:center;font-weight:900;border-radius:9px;background:#eaf7f2;color:#235649}
+.month-day{min-height:165px;border:1px solid var(--line);border-radius:12px;padding:8px;background:#fff;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.month-day.other{opacity:.3;background:#f3f4f6}.month-day.has-data{border-color:#7ccfb0;box-shadow:inset 0 0 0 1px #bcead8}
+.month-day-head{display:flex;justify-content:space-between;align-items:center;gap:5px}.month-day-number{font-weight:900}.month-day-count{font-size:10px;padding:2px 6px;border-radius:999px;background:#e9f8f2;color:#087052;font-weight:900}
+.month-day input,.month-day textarea{font-size:11px;padding:7px;border-radius:8px}.month-day textarea{min-height:46px}.month-day .btn{margin-top:auto;font-size:11px;padding:7px}
+@media(max-width:1100px){.month-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.month-weekday{display:none}.month-toolbar{grid-template-columns:1fr}.month-nav-group,.month-nav-right{justify-content:space-between}.month-picker{grid-template-columns:auto 1fr}.month-picker strong{grid-column:1/-1}}
+@media(max-width:650px){.month-grid{grid-template-columns:1fr 1fr}.entered-day-groups{grid-template-columns:1fr}}
+
 @media(max-width:900px){
   nav{grid-template-columns:repeat(2,1fr)}
   .grid2,.builder{grid-template-columns:1fr}
@@ -442,13 +463,14 @@ html,body{max-width:100%;overflow-x:hidden}
 .print-prep .login,
 .print-prep .no-print,
 .print-prep nav,
-.print-prep #dayList{
+.print-prep #dayList,
+.print-prep #enteredDaysPanel{
   display:none!important;
 }
 .print-prep main{
   width:196mm!important;
   max-width:196mm!important;
-  margin:0!important;
+  margin:0 auto!important;
   padding:0!important;
 }
 .print-prep .view{display:none!important}
@@ -465,6 +487,7 @@ html,body{max-width:100%;overflow-x:hidden}
 }
 .print-prep #todayContent{
   width:196mm!important;
+  margin:0 auto!important;
   zoom:var(--print-scale);
   background:#fff!important;
 }
@@ -517,12 +540,12 @@ html,body{max-width:100%;overflow-x:hidden}
     print-color-adjust:exact!important;
   }
   body{min-height:0!important}
-  header,.login,.no-print,nav,#dayList{display:none!important}
+  header,.login,.no-print,nav,#dayList,#enteredDaysPanel{display:none!important}
   main{
     width:196mm!important;
     max-width:196mm!important;
     height:283mm!important;
-    margin:0!important;
+    margin:0 auto!important;
     padding:0!important;
     overflow:hidden!important;
   }
@@ -549,6 +572,7 @@ html,body{max-width:100%;overflow-x:hidden}
   }
   #todayContent{
     width:196mm!important;
+    margin:0 auto!important;
     zoom:var(--print-scale,1)!important;
     transform:none!important;
     page-break-inside:avoid!important;
@@ -580,6 +604,7 @@ html,body{max-width:100%;overflow-x:hidden}
   <button class="active" data-view="today">今日・一覧</button>
   <button data-view="daily">1日入力</button>
   <button data-view="weekly">週間入力</button>
+  <button data-view="monthly">月間入力</button>
   <button data-view="menus">メニュー管理</button>
  </nav>
 </div></header>
@@ -590,7 +615,7 @@ html,body{max-width:100%;overflow-x:hidden}
   <div class="toolbar no-print"><input id="todayDate" type="date" style="width:auto"><div class="actions"><button id="editDay" class="btn secondary viewer-hide">この日を編集</button><button id="printDay" class="btn primary">印刷</button></div></div>
   <div id="todayContent"></div>
  </div>
- <div class="panel"><h2>作成済み練習一覧</h2><div id="dayList"></div></div>
+ <div class="panel" id="enteredDaysPanel"><h2>入力済み日程</h2><p class="muted" style="margin-top:-6px">練習内容が入力されている日を日付順に表示します。</p><div id="dayList" class="entered-days-list"></div></div>
 </section>
 
 <section id="v-daily" class="view">
@@ -624,6 +649,27 @@ html,body{max-width:100%;overflow-x:hidden}
    </div>
   </div>
   <div class="week-wrap"><table class="week"><thead id="weekHead"></thead><tbody id="weekBody"></tbody></table></div>
+ </div>
+</section>
+
+<section id="v-monthly" class="view">
+ <div class="panel">
+  <div class="month-toolbar no-print">
+   <div class="month-nav-group">
+    <button id="prevMonth" class="btn secondary">← 前の月</button>
+    <button id="thisMonth" class="btn secondary">今月</button>
+   </div>
+   <label class="month-picker" for="monthDate">
+    <span>月を選択</span>
+    <input id="monthDate" type="month">
+    <strong id="monthTitle"></strong>
+   </label>
+   <div class="month-nav-group month-nav-right">
+    <button id="saveMonth" class="btn primary">1か月を保存</button>
+    <button id="nextMonth" class="btn secondary">次の月 →</button>
+   </div>
+  </div>
+  <div class="month-grid" id="monthGrid"></div>
  </div>
 </section>
 
@@ -676,7 +722,7 @@ const SECTIONS=[
 {id:"afterStrength",label:"練習後半：筋トレ",cat:"筋トレメニュー"},
 {id:"afterOverall",label:"練習後半：全体",cat:"全体メニュー（後半）"}
 ];
-let menus=[],days={},daily=blankDay(),weekStart=getMonday(todayISO()),weekDraft={};
+let menus=[],days={},daily=blankDay(),weekStart=getMonday(todayISO()),weekDraft={},monthCursor=todayISO().slice(0,7),monthDraft={};
 let db=null,auth=null,user=null,currentRole=null,cloud=false,unsubMenus=null,unsubDays=null;
 
 
@@ -692,10 +738,12 @@ function loginIdToEmail(value){
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
 function cls(cat){return({"全体メニュー":"cat-overall","全体メニュー（前半）":"cat-overall","全体練習メニュー（本練習）":"cat-overall","全体メニュー（後半）":"cat-overall","筋トレメニュー":"cat-strength","短距離メニュー":"cat-sprint","ハードルメニュー":"cat-hurdle","跳躍メニュー":"cat-jump","投擲メニュー":"cat-throw","長距離メニュー":"cat-distance"})[cat]||""}
 function blankDay(){const sections={};SECTIONS.forEach(s=>sections[s.id]=[]);return{theme:"",notes:"",sections}}
-function todayISO(){const d=new Date();return new Date(d-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
-function addDays(v,n){const d=new Date(v+"T00:00:00");d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
-function getMonday(v){const d=new Date(v+"T00:00:00"),w=d.getDay();d.setDate(d.getDate()+(w===0?-6:1-w));return d.toISOString().slice(0,10)}
-function fmt(v){return new Date(v+"T00:00:00").toLocaleDateString("ja-JP",{year:"numeric",month:"long",day:"numeric",weekday:"short"})}
+function todayISO(){const now=new Date();const y=now.getFullYear(),m=String(now.getMonth()+1).padStart(2,"0"),d=String(now.getDate()).padStart(2,"0");return `${y}-${m}-${d}`}
+function parseISO(v){const [y,m,d]=String(v).split("-").map(Number);return new Date(Date.UTC(y,m-1,d))}
+function isoUTC(d){return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,"0")}-${String(d.getUTCDate()).padStart(2,"0")}`}
+function addDays(v,n){const d=parseISO(v);d.setUTCDate(d.getUTCDate()+n);return isoUTC(d)}
+function getMonday(v){const d=parseISO(v),w=d.getUTCDay();d.setUTCDate(d.getUTCDate()-(w===0?6:w-1));return isoUTC(d)}
+function fmt(v){return parseISO(v).toLocaleDateString("ja-JP",{timeZone:"UTC",year:"numeric",month:"long",day:"numeric",weekday:"short"})}
 function setStatus(t,state=""){el("dbstatus").textContent=t;el("dot").className="dot "+state}
 
 function migrateMenuCategories(list){
@@ -723,7 +771,7 @@ function canEditApp(){
 function applyRoleUI(){
  const viewer=currentRole==="viewer";
 
- document.querySelectorAll('nav button[data-view="daily"], nav button[data-view="weekly"], nav button[data-view="menus"]')
+ document.querySelectorAll('nav button[data-view="daily"], nav button[data-view="weekly"], nav button[data-view="monthly"], nav button[data-view="menus"]')
   .forEach(btn=>btn.style.display=viewer?"none":"");
 
  if(viewer){
@@ -878,7 +926,32 @@ function cleanupOnePagePrint(){
  el("v-today").classList.remove("print");
 }
 
-function renderToday(){const d=el("todayDate").value;el("todayContent").innerHTML=dayHTML(d,days[d]);const list=Object.keys(days).sort().reverse();el("dayList").innerHTML=list.length?list.map(x=>`<div class="panel">${dayHTML(x,days[x])}<div class="actions no-print"><button class="btn secondary small viewer-hide" onclick="openDay('${x}')">編集</button></div></div>`).join(""):`<div class="empty">まだありません</div>`}
+function dayHasContent(day){
+ if(!day)return false;
+ if((day.theme||"").trim()||(day.notes||"").trim())return true;
+ return SECTIONS.some(s=>(day.sections?.[s.id]||[]).length>0);
+}
+function compactDayCard(date,day){
+ const overallIds=["beforeOverall","beforeStrength","mainOverall","afterStrength","afterOverall"];
+ const eventIds=["sprint","hurdle","jump","throw","distance","middleStrength"];
+ function names(ids){return ids.flatMap(id=>(day.sections?.[id]||[]).map(mid=>menus.find(m=>m.id===mid)?.name).filter(Boolean))}
+ const overall=names(overallIds),events=names(eventIds);
+ return `<article class="entered-day-card">
+  <div class="toolbar"><div><h3>${fmt(date)}</h3>${day.theme?`<div><b>テーマ：</b>${esc(day.theme)}</div>`:""}</div><div class="actions"><button class="btn secondary small" onclick="showTodayDate('${date}')">表示</button><button class="btn secondary small viewer-hide" onclick="openDay('${date}')">編集</button></div></div>
+  <div class="entered-day-groups">
+   <div class="entered-day-group"><strong>全体練習</strong>${overall.length?`<ul>${overall.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`:`<span class="muted">なし</span>`}</div>
+   <div class="entered-day-group"><strong>各種目練習</strong>${events.length?`<ul>${events.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`:`<span class="muted">なし</span>`}</div>
+  </div>
+ </article>`;
+}
+window.showTodayDate=date=>{el("todayDate").value=date;renderToday();scrollTo({top:0,behavior:"smooth"})};
+function renderToday(){
+ const selected=el("todayDate").value;
+ el("todayContent").innerHTML=dayHTML(selected,days[selected]);
+ const list=Object.keys(days).filter(d=>dayHasContent(days[d])).sort();
+ el("dayList").innerHTML=list.length?list.map(d=>compactDayCard(d,days[d])).join(""):`<div class="empty">入力済みの日はありません</div>`;
+ applyRoleUI();
+}
 window.openDay=d=>{if(!canEditApp())return;el("dailyDate").value=d;loadDay(d);nav("daily")}
 el("editDay").onclick=()=>openDay(el("todayDate").value);el("todayDate").onchange=renderToday;el("printDay").onclick=()=>{
  prepareOnePagePrint();
@@ -915,7 +988,7 @@ function renderWeek(){
  });
  el("weekDate").value=weekStart;
  el("weekTitle").textContent=`${dates[0]} ～ ${dates[6]}（月〜日）`;
- el("weekHead").innerHTML=`<tr><th>区分</th>${dates.map(d=>`<th>${new Date(d+"T00:00:00").toLocaleDateString("ja-JP",{month:"numeric",day:"numeric",weekday:"short"})}<input value="${esc(weekDraft[d].theme||"")}" placeholder="テーマ" onchange="setWeekTheme('${d}',this.value)" style="margin-top:5px;font-size:12px"></th>`).join("")}</tr>`;
+ el("weekHead").innerHTML=`<tr><th>区分</th>${dates.map(d=>`<th>${parseISO(d).toLocaleDateString("ja-JP",{timeZone:"UTC",month:"numeric",day:"numeric",weekday:"short"})}<input value="${esc(weekDraft[d].theme||"")}" placeholder="テーマ" onchange="setWeekTheme('${d}',this.value)" style="margin-top:5px;font-size:12px"></th>`).join("")}</tr>`;
  el("weekBody").innerHTML=SECTIONS.map(s=>`<tr><th class="${cls(s.cat)}">${esc(s.label)}</th>${dates.map(d=>{const ids=weekDraft[d].sections[s.id]||[];return `<td><div class="weekcell ${cls(s.cat)}"><div class="picker"><select id="w-${d}-${s.id}">${optionHTML(s)}</select><button class="btn primary small" onclick="addWeek('${d}','${s.id}')">追加</button></div>${ids.map((id,i)=>{const m=menus.find(x=>x.id===id);return m?`<div class="weekitem ${cls(m.category)}"><span>${esc(m.name)}</span><button class="x" onclick="removeWeek('${d}','${s.id}',${i})">×</button></div>`:""}).join("")}</div></td>`}).join("")}</tr>`).join("")
 }
 window.addWeek=(d,s)=>{const p=el(`w-${d}-${s}`);if(p.value){weekDraft[d].sections[s].push(p.value);renderWeek()}}
@@ -925,12 +998,58 @@ function shiftWeek(n){weekStart=addDays(weekStart,n*7);loadWeek();renderWeek()}
 el("prevWeek").onclick=()=>shiftWeek(-1);el("nextWeek").onclick=()=>shiftWeek(1);el("thisWeek").onclick=()=>{weekStart=getMonday(todayISO());loadWeek();renderWeek()};el("weekDate").onchange=e=>{weekStart=getMonday(e.target.value);loadWeek();renderWeek()}
 el("saveWeek").onclick=async()=>{if(!canEditApp())return alert("閲覧専用アカウントでは編集できません。");if(cloud){const batch=db.batch();for(const [date,d] of Object.entries(weekDraft)){d.updatedBy=user.email;d.updatedAtText=new Date().toISOString();days[date]=structuredClone(d);batch.set(db.collection("teams").doc(TEAM_ID).collection("days").doc(date),{...d,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})}await batch.commit()}else Object.assign(days,structuredClone(weekDraft));localSave();renderAll();markSaved();alert("1週間を保存しました")}
 
-function renderAll(){renderMenus();renderDaily();renderToday();renderWeek();applyRoleUI()}
+function monthDates(month){
+ const [y,m]=month.split("-").map(Number);
+ const last=new Date(Date.UTC(y,m,0)).getUTCDate();
+ return Array.from({length:last},(_,i)=>`${y}-${String(m).padStart(2,"0")}-${String(i+1).padStart(2,"0")}`);
+}
+function loadMonth(){monthDraft={};monthDates(monthCursor).forEach(d=>monthDraft[d]=structuredClone(days[d]||blankDay()))}
+function renderMonth(){
+ const dates=monthDates(monthCursor);
+ if(!Object.keys(monthDraft).length||!monthDraft[dates[0]])loadMonth();
+ el("monthDate").value=monthCursor;
+ const [y,m]=monthCursor.split("-").map(Number);
+ el("monthTitle").textContent=`${y}年${m}月（月曜始まり）`;
+ const firstOffset=(parseISO(dates[0]).getUTCDay()+6)%7;
+ const weekdays=["月","火","水","木","金","土","日"].map(w=>`<div class="month-weekday">${w}</div>`).join("");
+ const blanks=Array.from({length:firstOffset},()=>`<div class="month-day other"></div>`).join("");
+ const cells=dates.map(d=>{
+  const day=monthDraft[d]||blankDay();
+  const count=SECTIONS.reduce((n,s)=>n+(day.sections?.[s.id]?.length||0),0);
+  return `<div class="month-day ${dayHasContent(day)?"has-data":""}">
+   <div class="month-day-head"><span class="month-day-number">${Number(d.slice(-2))}日</span>${count?`<span class="month-day-count">${count}件</span>`:""}</div>
+   <input value="${esc(day.theme||"")}" placeholder="テーマ" oninput="setMonthTheme('${d}',this.value)">
+   <textarea placeholder="連絡事項" oninput="setMonthNotes('${d}',this.value)">${esc(day.notes||"")}</textarea>
+   <button class="btn secondary small" onclick="openMonthDay('${d}')">1日入力を開く</button>
+  </div>`;
+ }).join("");
+ el("monthGrid").innerHTML=weekdays+blanks+cells;
+}
+window.setMonthTheme=(d,v)=>{monthDraft[d].theme=v};
+window.setMonthNotes=(d,v)=>{monthDraft[d].notes=v};
+window.openMonthDay=d=>{el("dailyDate").value=d;loadDay(d);nav("daily")};
+function shiftMonth(n){const [y,m]=monthCursor.split("-").map(Number);const d=new Date(Date.UTC(y,m-1+n,1));monthCursor=`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,"0")}`;loadMonth();renderMonth()}
+el("prevMonth").onclick=()=>shiftMonth(-1);
+el("nextMonth").onclick=()=>shiftMonth(1);
+el("thisMonth").onclick=()=>{monthCursor=todayISO().slice(0,7);loadMonth();renderMonth()};
+el("monthDate").onchange=e=>{if(!e.target.value)return;monthCursor=e.target.value;loadMonth();renderMonth()};
+el("saveMonth").onclick=async()=>{
+ if(!canEditApp())return alert("閲覧専用アカウントでは編集できません。");
+ const changed=Object.entries(monthDraft).filter(([date,d])=>dayHasContent(d)||dayHasContent(days[date]));
+ if(cloud){
+  const batch=db.batch();
+  changed.forEach(([date,d])=>{d.updatedBy=user.email;d.updatedAtText=new Date().toISOString();days[date]=structuredClone(d);batch.set(db.collection("teams").doc(TEAM_ID).collection("days").doc(date),{...d,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})});
+  await batch.commit();
+ }else changed.forEach(([date,d])=>days[date]=structuredClone(d));
+ localSave();renderAll();markSaved("1か月保存済み");alert("1か月を保存しました");
+};
+
+function renderAll(){renderMenus();renderDaily();renderToday();renderWeek();renderMonth();applyRoleUI()}
 function configured(){return window.FIREBASE_CONFIG?.apiKey&&!String(window.FIREBASE_CONFIG.apiKey).includes("ここに")}
 function startRealtime(){
  if(unsubMenus)unsubMenus();if(unsubDays)unsubDays();
  unsubMenus=db.collection("teams").doc(TEAM_ID).collection("menus").onSnapshot(s=>{menus=migrateMenuCategories(s.docs.map(d=>({id:d.id,...d.data()})));localSave();renderAll()},e=>setStatus("メニュー読込エラー","offline"));
- unsubDays=db.collection("teams").doc(TEAM_ID).collection("days").onSnapshot(s=>{days={};s.docs.forEach(d=>days[d.id]=d.data());localSave();loadDay(el("dailyDate").value);loadWeek();renderAll()},e=>setStatus("練習読込エラー","offline"));
+ unsubDays=db.collection("teams").doc(TEAM_ID).collection("days").onSnapshot(s=>{days={};s.docs.forEach(d=>days[d.id]=d.data());localSave();loadDay(el("dailyDate").value);loadWeek();loadMonth();renderAll()},e=>setStatus("練習読込エラー","offline"));
 }
 
 async function syncStarterMenus(){
@@ -964,7 +1083,7 @@ async function syncStarterMenus(){
 
 async function init(){
  menus=migrateMenuCategories(JSON.parse(localStorage.getItem("coachMenus")||"[]"));days=JSON.parse(localStorage.getItem("coachDays")||"{}");if(!menus.length)menus=structuredClone(STARTER_MENUS);
- fillBasics();el("todayDate").value=todayISO();el("dailyDate").value=todayISO();el("weekDate").value=weekStart;loadDay(todayISO());loadWeek();renderAll();
+ fillBasics();el("todayDate").value=todayISO();el("dailyDate").value=todayISO();el("weekDate").value=weekStart;el("monthDate").value=monthCursor;loadDay(todayISO());loadWeek();loadMonth();renderAll();
  if(!configured()){setStatus("未接続・端末保存","offline");return}
  try{
   firebase.initializeApp(window.FIREBASE_CONFIG);auth=firebase.auth();db=firebase.firestore();cloud=true;

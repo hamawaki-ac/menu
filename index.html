@@ -342,6 +342,7 @@ input:focus,select:focus,textarea:focus{
 .week-picker input{min-width:0;padding:8px 9px}
 .week-picker strong{text-align:center;color:#173f34;font-size:14px;white-space:nowrap}
 .week-wrap{
+  min-height:360px;
   overflow-x:hidden;overflow-y:auto;max-height:calc(100vh - 230px);
   border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:var(--shadow-sm)
 }
@@ -403,14 +404,6 @@ input:focus,select:focus,textarea:focus{
   main{padding:15px 12px 28px}
   .panel{padding:15px;border-radius:16px}
 }
-@media print{
-  header,.no-print,.login{display:none!important}
-  body{background:#fff}
-  .panel,.menu,.section{box-shadow:none}
-  .view{display:none!important}
-  .view.print{display:block!important}
-}
-
 /* Mobile form fit */
 html,body{max-width:100%;overflow-x:hidden}
 .field,input,select,textarea{min-width:0}
@@ -439,139 +432,129 @@ html,body{max-width:100%;overflow-x:hidden}
 }
 
 /* A4 print layout */
-@page{
-  size:A4 portrait;
-  margin:10mm;
+
+
+/* Unified A4 one-day print layout */
+.print-prep{
+  --print-scale:1;
 }
+.print-prep header,
+.print-prep .login,
+.print-prep .no-print,
+.print-prep nav,
+.print-prep #dayList{
+  display:none!important;
+}
+.print-prep main{
+  width:196mm!important;
+  max-width:196mm!important;
+  margin:0!important;
+  padding:0!important;
+}
+.print-prep .view{display:none!important}
+.print-prep #v-today.print{display:block!important}
+.print-prep #v-today.print>.panel:first-child{
+  display:block!important;
+  width:196mm!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  background:#fff!important;
+}
+.print-prep #todayContent{
+  width:196mm!important;
+  zoom:var(--print-scale);
+  background:#fff!important;
+}
+.print-prep #todayContent::before{
+  content:'浜脇AC｜トレーニングメニュー';
+  display:block;
+  text-align:center;
+  font-size:16pt;
+  font-weight:900;
+  margin:0 0 2.5mm;
+  padding-bottom:2mm;
+  border-bottom:2px solid #111;
+}
+.print-prep #todayContent>h2{
+  text-align:center!important;
+  font-size:12.5pt!important;
+  margin:0 0 1.5mm!important;
+  padding:0!important;
+  border:0!important;
+}
+.print-prep #todayContent>h2::before{content:none!important}
+.print-prep #todayContent p{font-size:8pt!important;margin:.7mm 0!important;line-height:1.2!important}
+.print-prep .today-summary{margin:1mm 0!important;gap:1mm!important}
+.print-prep .today-summary span{font-size:7pt!important;padding:.7mm 1.5mm!important}
+.print-prep .today-board{gap:1.5mm!important;margin-top:1.5mm!important}
+.print-prep .today-major{border-radius:1.8mm!important;box-shadow:none!important;border:1px solid #777!important;overflow:hidden!important}
+.print-prep .today-major-title{font-size:9.5pt!important;padding:1.5mm 2.5mm!important}
+.print-prep .today-major-count{height:auto!important;min-width:auto!important;font-size:6.5pt!important;padding:.3mm 1.2mm!important}
+.print-prep .today-major-body{padding:1.2mm!important;gap:1mm!important}
+.print-prep .today-subsection{border-radius:1.2mm!important}
+.print-prep .today-subtitle{font-size:7.8pt!important;padding:.9mm 1.5mm!important}
+.print-prep .today-subitems{padding:.9mm!important;gap:.6mm!important}
+.print-prep .today-menu-row{padding:.9mm 1.2mm!important;gap:1mm!important;border-radius:.8mm!important;grid-template-columns:minmax(0,1fr) auto!important}
+.print-prep .today-menu-row strong{font-size:7.4pt!important;margin-bottom:.2mm!important}
+.print-prep .today-menu-row small{font-size:6.1pt!important;line-height:1.1!important}
+.print-prep .today-menu-time{font-size:6.1pt!important;padding:.25mm .8mm!important}
+.print-prep .notice{font-size:6.8pt!important;line-height:1.15!important;padding:1.2mm 1.5mm!important;margin-top:1.5mm!important;box-shadow:none!important}
+.print-prep .muted{font-size:5.8pt!important;margin-top:.7mm!important}
+
+@page{size:A4 portrait;margin:7mm}
 @media print{
   html,body{
-    width:210mm;
-    min-height:297mm;
+    width:210mm!important;
+    height:297mm!important;
     margin:0!important;
     padding:0!important;
+    overflow:hidden!important;
     background:#fff!important;
-    color:#111!important;
     -webkit-print-color-adjust:exact!important;
     print-color-adjust:exact!important;
   }
+  body{min-height:0!important}
+  header,.login,.no-print,nav,#dayList{display:none!important}
   main{
-    width:auto!important;
-    max-width:none!important;
+    width:196mm!important;
+    max-width:196mm!important;
+    height:283mm!important;
     margin:0!important;
     padding:0!important;
+    overflow:hidden!important;
   }
-  header,.no-print,.login,.toolbar,.status,nav{display:none!important}
+  .view{display:none!important}
   #v-today.print{
     display:block!important;
-    width:100%!important;
+    width:196mm!important;
+    height:283mm!important;
+    overflow:hidden!important;
+    page-break-after:avoid!important;
+    break-after:avoid-page!important;
   }
-  #v-today.print>.panel{
+  #v-today.print>.panel:first-child{
+    display:block!important;
+    width:196mm!important;
+    height:283mm!important;
+    margin:0!important;
+    padding:0!important;
     border:0!important;
     border-radius:0!important;
     box-shadow:none!important;
-    padding:0!important;
-    margin:0!important;
     background:#fff!important;
-  }
-  #v-today.print #dayList{display:none!important}
-  #todayContent{
-    width:100%!important;
-    font-size:10.5pt!important;
-  }
-  #todayContent>h2{
-    text-align:center;
-    font-size:18pt!important;
-    margin:0 0 5mm!important;
-    padding:0 0 3mm!important;
-    border-bottom:2px solid #111;
-  }
-  #todayContent>h2::before{
-    content:"浜脇AC｜トレーニングメニュー";
-    display:block;
-    font-size:20pt;
-    font-weight:900;
-    margin-bottom:3mm;
-    color:#111;
-  }
-  .today-summary{
-    margin:2mm 0 4mm!important;
-  }
-  .today-board{
-    gap:4mm!important;
-    margin-top:4mm!important;
-  }
-  .today-major{
-    break-inside:avoid-page;
-    page-break-inside:avoid;
-    box-shadow:none!important;
-    border:1px solid #777!important;
-    border-radius:3mm!important;
     overflow:hidden!important;
   }
-  .today-major-title{
-    font-size:13pt!important;
-    padding:3mm 4mm!important;
-  }
-  .today-major-body{
-    padding:3mm!important;
-    gap:2.5mm!important;
-  }
-  .today-subsection{
-    break-inside:avoid-page;
-    page-break-inside:avoid;
-    border-radius:2.5mm!important;
-  }
-  .today-subtitle{
-    font-size:10.5pt!important;
-    padding:2.2mm 3mm!important;
-  }
-  .today-subitems{
-    padding:2mm!important;
-    gap:1.5mm!important;
-  }
-  .today-menu-row{
-    break-inside:avoid;
-    page-break-inside:avoid;
-    padding:2mm 2.5mm!important;
-    border-radius:1.8mm!important;
-    grid-template-columns:minmax(0,1fr) auto!important;
-  }
-  .today-menu-row strong{font-size:10pt!important}
-  .today-menu-row small{font-size:8.5pt!important;line-height:1.35!important}
-  .today-menu-time{font-size:8.5pt!important}
-  .notice{
-    break-inside:avoid-page;
-    page-break-inside:avoid;
-    box-shadow:none!important;
-    margin-top:4mm!important;
+  #todayContent{
+    width:196mm!important;
+    zoom:var(--print-scale,1)!important;
+    transform:none!important;
+    page-break-inside:avoid!important;
+    break-inside:avoid-page!important;
   }
   a[href]::after{content:none!important}
-}
-
-
-@media print{
-  @page{size:A4 portrait;margin:7mm}
-  html,body{width:210mm;height:297mm;margin:0!important;padding:0!important;background:#fff!important;overflow:hidden!important}
-  body{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-  header,.no-print,.login,#dayList,.panel:has(#dayList){display:none!important}
-  main{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
-  .view{display:none!important}
-  #v-today.print{display:block!important}
-  #v-today.print>.panel:first-child{display:block!important;margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;background:#fff!important}
-  #todayContent{transform-origin:top left;width:100%!important;page-break-inside:avoid!important;break-inside:avoid!important}
-  #todayContent::before{content:'浜脇AC｜トレーニングメニュー';display:block;text-align:center;font-size:16pt;font-weight:900;margin:0 0 3mm;padding-bottom:2mm;border-bottom:2px solid #111}
-  #todayContent h2{font-size:13pt!important;margin:0 0 2mm!important}
-  #todayContent p{font-size:8.5pt!important;margin:1mm 0!important;line-height:1.25!important}
-  .today-summary{margin:1mm 0!important;gap:1mm!important}.today-summary span{font-size:7.5pt!important;padding:1mm 2mm!important}
-  .today-board{gap:2mm!important;margin-top:2mm!important}
-  .today-major{border-radius:2mm!important;box-shadow:none!important;break-inside:avoid!important;page-break-inside:avoid!important}
-  .today-major-title{font-size:10.5pt!important;padding:2mm 3mm!important}.today-major-count{height:auto!important;min-width:auto!important;font-size:7pt!important;padding:.5mm 1.5mm!important}
-  .today-major-body{padding:1.5mm!important;gap:1.2mm!important}
-  .today-subsection{border-radius:1.5mm!important;break-inside:avoid!important;page-break-inside:avoid!important}
-  .today-subtitle{font-size:8.5pt!important;padding:1.2mm 2mm!important}.today-subitems{padding:1.2mm!important;gap:.8mm!important}
-  .today-menu-row{padding:1.2mm 1.5mm!important;gap:1.5mm!important;border-radius:1mm!important;break-inside:avoid!important;page-break-inside:avoid!important}
-  .today-menu-row strong{font-size:8pt!important;margin-bottom:.3mm!important}.today-menu-row small{font-size:6.8pt!important;line-height:1.15!important}.today-menu-time{font-size:6.8pt!important;padding:.4mm 1mm!important}
-  .notice{font-size:7.5pt!important;line-height:1.2!important;padding:1.5mm 2mm!important;margin-top:2mm!important}.muted{font-size:6.5pt!important;margin-top:1mm!important}
 }
 
 </style>
@@ -874,23 +857,34 @@ function dayHTML(date,day){
   <p class="muted">最終更新：${esc(day.updatedBy||"")}</p>`;
 }
 
-function fitTodayToOnePage(){
+function prepareOnePagePrint(){
  const content=el("todayContent");
  if(!content)return;
- content.style.transform="none";
- content.style.width="100%";
- const available=(297-14)*96/25.4-8;
+ document.body.classList.add("print-prep");
+ el("v-today").classList.add("print");
+ document.body.style.setProperty("--print-scale","1");
+ content.style.removeProperty("transform");
+ content.style.removeProperty("width");
+ void content.offsetHeight;
+ const pxPerMm=96/25.4;
+ const available=283*pxPerMm;
  const actual=content.scrollHeight;
- if(actual>available){
-  const scale=Math.max(0.58,Math.min(1,available/actual));
-  content.style.transform=`scale(${scale})`;
-  content.style.width=`${100/scale}%`;
- }
+ const scale=Math.max(0.42,Math.min(1,available/actual));
+ document.body.style.setProperty("--print-scale",String(scale));
+}
+function cleanupOnePagePrint(){
+ document.body.classList.remove("print-prep");
+ document.body.style.removeProperty("--print-scale");
+ el("v-today").classList.remove("print");
 }
 
 function renderToday(){const d=el("todayDate").value;el("todayContent").innerHTML=dayHTML(d,days[d]);const list=Object.keys(days).sort().reverse();el("dayList").innerHTML=list.length?list.map(x=>`<div class="panel">${dayHTML(x,days[x])}<div class="actions no-print"><button class="btn secondary small viewer-hide" onclick="openDay('${x}')">編集</button></div></div>`).join(""):`<div class="empty">まだありません</div>`}
 window.openDay=d=>{if(!canEditApp())return;el("dailyDate").value=d;loadDay(d);nav("daily")}
-el("editDay").onclick=()=>openDay(el("todayDate").value);el("todayDate").onchange=renderToday;el("printDay").onclick=()=>{el("v-today").classList.add("print");fitTodayToOnePage();setTimeout(()=>{window.print();setTimeout(()=>{el("todayContent").style.transform="none";el("todayContent").style.width="100%";el("v-today").classList.remove("print")},500)},100)}
+el("editDay").onclick=()=>openDay(el("todayDate").value);el("todayDate").onchange=renderToday;el("printDay").onclick=()=>{
+ prepareOnePagePrint();
+ setTimeout(()=>window.print(),120);
+};
+window.addEventListener("afterprint",cleanupOnePagePrint);
 
 function renderMenus(){
  const c=el("filterCat").value,q=el("filterText").value.toLowerCase(),list=menus.filter(m=>(!c||m.category===c)&&(!q||(m.name+" "+m.detail+" "+m.target).toLowerCase().includes(q)));
@@ -912,6 +906,13 @@ function loadWeek(){weekDraft={};for(let i=0;i<7;i++){const d=addDays(weekStart,
 function renderWeek(){
  weekStart=getMonday(weekStart);
  const dates=Array.from({length:7},(_,i)=>addDays(weekStart,i));
+ dates.forEach(d=>{
+  if(!weekDraft[d]) weekDraft[d]=structuredClone(days[d]||blankDay());
+  if(!weekDraft[d].sections) weekDraft[d].sections=blankDay().sections;
+  SECTIONS.forEach(section=>{
+   if(!Array.isArray(weekDraft[d].sections[section.id])) weekDraft[d].sections[section.id]=[];
+  });
+ });
  el("weekDate").value=weekStart;
  el("weekTitle").textContent=`${dates[0]} ～ ${dates[6]}（月〜日）`;
  el("weekHead").innerHTML=`<tr><th>区分</th>${dates.map(d=>`<th>${new Date(d+"T00:00:00").toLocaleDateString("ja-JP",{month:"numeric",day:"numeric",weekday:"short"})}<input value="${esc(weekDraft[d].theme||"")}" placeholder="テーマ" onchange="setWeekTheme('${d}',this.value)" style="margin-top:5px;font-size:12px"></th>`).join("")}</tr>`;

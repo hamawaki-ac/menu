@@ -81,3 +81,15 @@ teams
 ・「この日を編集」と一覧の編集ボタンを非表示
 ・URLや開発者ツールから直接編集画面を開こうとしても、今日・一覧へ戻す
 ・Firestoreルールでもviewerの書き込みを拒否
+
+
+■ ユーザー名ログイン
+・ログイン欄は「ユーザー名またはメールアドレス」
+・メールアドレスを入力した場合は従来どおりログイン
+・ユーザー名を入力した場合は、内部で username@hamawaki-ac.example に変換
+・Firebase Authenticationでユーザー名アカウントを作る場合：
+  例）ユーザー名 coach01
+      Authentication登録メール coach01@hamawaki-ac.example
+・Firestore members の email も同じFirebase登録メールを入力
+・ユーザー名方式のアカウントは実在メールではないため、パスワード再設定メールは届きません
+・パスワードを忘れた場合は管理者がFirebase Authenticationから再設定します

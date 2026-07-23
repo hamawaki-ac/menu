@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>陸上部 練習メニュー管理</title>
+<title>浜脇AC│トレーニングメニュー</title>
 
 <style>
 :root{
-  --emerald:#10b981;
-  --emerald-2:#059669;
-  --emerald-3:#047857;
-  --emerald-soft:#ecfdf5;
+  --emerald:#1d8fbf;
+  --emerald-2:#3d9f7a;
+  --emerald-3:#171717;
+  --emerald-soft:#eef8fb;
   --bg:#f5f8f7;
   --panel:rgba(255,255,255,.92);
   --text:#16211d;
@@ -46,13 +46,13 @@ header{
   top:0;
   z-index:30;
   backdrop-filter:blur(18px);
-  background:linear-gradient(135deg,rgba(5,150,105,.96),rgba(4,120,87,.96));
+  background:linear-gradient(135deg,#1778a8 0%,#2f8f8b 42%,#78a93f 68%,#e0cf18 100%);
   color:#fff;
-  box-shadow:0 8px 30px rgba(4,120,87,.22);
+  box-shadow:0 8px 30px rgba(0,0,0,.24);border-bottom:5px solid #111;
 }
 .head{max-width:1500px;margin:auto;padding:14px 18px 12px}
 .headtop{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
-h1{font-size:22px;margin:0;font-weight:900;letter-spacing:.03em}
+h1{font-size:22px;margin:0;font-weight:900;letter-spacing:.04em;text-shadow:0 2px 4px rgba(0,0,0,.45)}
 .status{
   display:flex;align-items:center;gap:8px;flex-wrap:wrap;
   padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.10);
@@ -72,7 +72,7 @@ nav button{
 }
 nav button:hover{background:rgba(255,255,255,.10)}
 nav button.active{
-  background:#fff;color:var(--emerald-3);
+  background:#f3df24;color:#111;
   box-shadow:0 8px 18px rgba(0,0,0,.13)
 }
 main{max-width:1500px;margin:auto;padding:22px 18px 36px}
@@ -114,7 +114,7 @@ input:focus,select:focus,textarea:focus{
 }
 .btn:hover{transform:translateY(-1px)}
 .primary{
-  background:linear-gradient(135deg,var(--emerald),var(--emerald-2));
+  background:linear-gradient(135deg,#1d8fbf,#4f9f62 58%,#d9c91d);
   color:#fff;box-shadow:0 8px 18px rgba(16,185,129,.22)
 }
 .primary:hover{box-shadow:0 12px 24px rgba(16,185,129,.28)}
@@ -185,6 +185,133 @@ input:focus,select:focus,textarea:focus{
 }
 .menu h4{margin:0 0 7px;font-size:17px}
 .meta{color:var(--muted);font-size:12px;margin:7px 0;line-height:1.6}
+
+.today-board{
+  display:grid;
+  gap:18px;
+  margin-top:16px;
+}
+.today-major{
+  border:1px solid var(--line);
+  border-radius:18px;
+  overflow:hidden;
+  background:#fff;
+  box-shadow:var(--shadow-sm);
+}
+.today-major-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:14px 17px;
+  color:#fff;
+  font-size:19px;
+  font-weight:900;
+  letter-spacing:.04em;
+}
+.today-major.overall .today-major-title{
+  background:linear-gradient(135deg,#1778a8,#3f9a75 58%,#d5c91e);
+  color:#fff;
+}
+.today-major.events .today-major-title{
+  background:linear-gradient(135deg,#171717,#2f4858);
+}
+.today-major-count{
+  min-width:30px;
+  height:30px;
+  padding:0 9px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:999px;
+  background:rgba(255,255,255,.18);
+  border:1px solid rgba(255,255,255,.3);
+  font-size:12px;
+}
+.today-major-body{
+  padding:13px;
+  display:grid;
+  gap:11px;
+}
+.today-subsection{
+  border:1px solid color-mix(in srgb,var(--cat) 22%,white);
+  border-left:7px solid var(--cat);
+  border-radius:13px;
+  overflow:hidden;
+  background:linear-gradient(90deg,var(--soft),#fff 34%);
+}
+.today-subtitle{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:10px 12px;
+  color:var(--cat);
+  font-size:14px;
+  font-weight:900;
+  border-bottom:1px solid color-mix(in srgb,var(--cat) 17%,white);
+}
+.today-subitems{
+  display:grid;
+  gap:7px;
+  padding:9px;
+}
+.today-menu-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  align-items:start;
+  padding:9px 10px;
+  border-radius:10px;
+  background:rgba(255,255,255,.88);
+  border:1px solid color-mix(in srgb,var(--cat) 12%,white);
+}
+.today-menu-row strong{
+  display:block;
+  margin-bottom:3px;
+}
+.today-menu-row small{
+  color:var(--muted);
+  line-height:1.5;
+}
+.today-menu-time{
+  white-space:nowrap;
+  color:var(--cat);
+  font-size:12px;
+  font-weight:900;
+  padding:4px 7px;
+  border-radius:999px;
+  background:var(--soft);
+}
+.today-empty-group{
+  padding:14px;
+  text-align:center;
+  color:#98a2b3;
+  border:1px dashed #cbd8d3;
+  border-radius:11px;
+  background:#fbfdfc;
+}
+.today-summary{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:10px 0 2px;
+}
+.today-summary span{
+  padding:6px 10px;
+  border-radius:999px;
+  background:#f0f7f4;
+  color:#35534a;
+  font-size:12px;
+  font-weight:800;
+}
+@media(max-width:700px){
+  .today-major-title{font-size:17px;padding:12px 13px}
+  .today-major-body{padding:9px}
+  .today-menu-row{grid-template-columns:1fr}
+  .today-menu-time{justify-self:start}
+}
+
 .toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .filters{
   display:grid;grid-template-columns:240px 1fr;gap:10px;margin-bottom:13px;
@@ -218,7 +345,7 @@ input:focus,select:focus,textarea:focus{
 .x{border:0;border-radius:6px;background:#fff;color:#b42318;font-weight:900}
 .login{
   position:fixed;inset:0;z-index:100;
-  background:radial-gradient(circle at top,rgba(16,185,129,.24),transparent 35%),rgba(5,39,30,.84);
+  background:radial-gradient(circle at top,rgba(29,143,191,.30),transparent 35%),linear-gradient(135deg,rgba(13,49,65,.92),rgba(22,22,22,.92));
   backdrop-filter:blur(8px);
   display:flex;align-items:center;justify-content:center;padding:18px
 }
@@ -254,17 +381,17 @@ input:focus,select:focus,textarea:focus{
 <body>
 <div id="login" class="login hidden">
  <div class="loginbox">
-  <h2>コーチログイン</h2>
-  <p class="muted">管理者が登録したユーザー名、またはメールアドレスでログインしてください。</p>
+  <h2>浜脇ACログイン</h2>
+  <p class="muted">通知されているユーザー名とパスワードでログインしてください。</p>
   <div class="field"><label>ユーザー名またはメールアドレス</label><input id="loginId" type="text" autocomplete="username" placeholder="例：coach01 または coach@example.com"></div>
   <div class="field"><label>パスワード</label><input id="password" type="password"></div>
-  <button id="loginBtn" class="btn primary" style="width:100%">ログイン</button><p class="muted" style="margin-bottom:0">アカウント追加は管理者がFirebaseコンソールから行います。</p>
+  <button id="loginBtn" class="btn primary" style="width:100%">ログイン</button><p class="muted" style="margin-bottom:0">アカウントやパスワードが分からない人は飯降コーチに問い合わせてください。</p>
   <p id="loginMsg" class="muted"></p>
  </div>
 </div>
 
 <header><div class="head">
- <div class="headtop"><h1>HAMAWAKI AC｜Training Manager</h1>
+ <div class="headtop"><div><h1>浜脇AC│トレーニングメニュー</h1><div style="height:4px;width:190px;margin-top:6px;border-radius:999px;background:linear-gradient(90deg,#1d8fbf,#62a34a,#f1dc22,#111)"></div></div>
   <div class="status"><span id="dot" class="dot"></span><span id="dbstatus">確認中</span><span id="savestatus"></span><button id="logout" class="btn secondary small" style="display:none">ログアウト</button></div>
  </div>
  <nav>
@@ -476,8 +603,66 @@ el("copyPrev").onclick=()=>{const d=addDays(el("dailyDate").value,-1);if(!days[d
 
 function dayHTML(date,day){
  if(!day)return `<div class="empty">${fmt(date)}は未作成です</div>`;
- const blocks=SECTIONS.map(s=>{const a=day.sections?.[s.id]||[];if(!a.length)return"";return `<div class="section ${cls(s.cat)}"><h3>${esc(s.label)}</h3><div class="items">${a.map(id=>{const m=menus.find(x=>x.id===id);return m?`<div class="item ${cls(m.category)}"><div><b>${esc(m.name)}</b>${m.detail?`<br><small>${esc(m.detail)}</small>`:""}</div></div>`:""}).join("")}</div></div>`}).join("");
- return `<h2>${fmt(date)}</h2>${day.theme?`<p><b>テーマ：</b>${esc(day.theme)}</p>`:""}${blocks}${day.notes?`<p><b>連絡：</b>${esc(day.notes)}</p>`:""}<p class="muted">最終更新：${esc(day.updatedBy||"")}</p>`
+
+ const overallIds=["beforeOverall","beforeStrength","mainOverall","afterStrength","afterOverall"];
+ const eventIds=["sprint","hurdle","jump","throw","distance","middleStrength"];
+
+ function renderSubsection(section){
+  if(!section) return "";
+  const ids=day.sections?.[section.id]||[];
+  if(!ids.length) return "";
+
+  const rows=ids.map(id=>{
+   const m=menus.find(x=>x.id===id);
+   if(!m) return "";
+   const detail=[m.detail,m.sets,m.intensity,m.rest].filter(Boolean).join("／");
+   return `<div class="today-menu-row ${cls(m.category)}">
+    <div>
+     <strong>${esc(m.name)}</strong>
+     ${detail?`<small>${esc(detail)}</small>`:""}
+    </div>
+    ${m.duration?`<span class="today-menu-time">${esc(m.duration)}</span>`:""}
+   </div>`;
+  }).join("");
+
+  return `<div class="today-subsection ${cls(section.cat)}">
+   <div class="today-subtitle">
+    <span>${esc(section.label)}</span>
+    <span>${ids.length}件</span>
+   </div>
+   <div class="today-subitems">${rows}</div>
+  </div>`;
+ }
+
+ function renderMajor(title,type,ids){
+  const sections=ids.map(id=>SECTIONS.find(s=>s.id===id)).filter(Boolean);
+  const rendered=sections.map(renderSubsection).filter(Boolean);
+  const count=sections.reduce((sum,s)=>sum+(day.sections?.[s.id]?.length||0),0);
+  return `<div class="today-major ${type}">
+   <div class="today-major-title">
+    <span>${title}</span>
+    <span class="today-major-count">${count}件</span>
+   </div>
+   <div class="today-major-body">
+    ${rendered.length?rendered.join(""):`<div class="today-empty-group">設定されていません</div>`}
+   </div>
+  </div>`;
+ }
+
+ const totalMenus=SECTIONS.reduce((sum,s)=>sum+(day.sections?.[s.id]?.length||0),0);
+
+ return `<h2>${fmt(date)}</h2>
+  ${day.theme?`<p><b>テーマ：</b>${esc(day.theme)}</p>`:""}
+  <div class="today-summary">
+   <span>登録メニュー ${totalMenus}件</span>
+   ${day.updatedBy?`<span>更新者 ${esc(day.updatedBy)}</span>`:""}
+  </div>
+  <div class="today-board">
+   ${renderMajor("全体練習","overall",overallIds)}
+   ${renderMajor("各種目練習","events",eventIds)}
+  </div>
+  ${day.notes?`<div class="notice" style="margin-top:15px"><b>連絡事項</b><br>${esc(day.notes)}</div>`:""}
+  <p class="muted">最終更新：${esc(day.updatedBy||"")}</p>`;
 }
 function renderToday(){const d=el("todayDate").value;el("todayContent").innerHTML=dayHTML(d,days[d]);const list=Object.keys(days).sort().reverse();el("dayList").innerHTML=list.length?list.map(x=>`<div class="panel">${dayHTML(x,days[x])}<div class="actions no-print"><button class="btn secondary small viewer-hide" onclick="openDay('${x}')">編集</button></div></div>`).join(""):`<div class="empty">まだありません</div>`}
 window.openDay=d=>{if(!canEditApp())return;el("dailyDate").value=d;loadDay(d);nav("daily")}

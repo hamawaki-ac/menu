@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>浜脇AC│トレーニングメニュー</title>
+<title>陸上部 練習メニュー管理</title>
 
 <style>
 :root{
-  --emerald:#1d8fbf;
-  --emerald-2:#3d9f7a;
-  --emerald-3:#171717;
-  --emerald-soft:#eef8fb;
+  --emerald:#10b981;
+  --emerald-2:#059669;
+  --emerald-3:#047857;
+  --emerald-soft:#ecfdf5;
   --bg:#f5f8f7;
   --panel:rgba(255,255,255,.92);
   --text:#16211d;
@@ -46,13 +46,13 @@ header{
   top:0;
   z-index:30;
   backdrop-filter:blur(18px);
-  background:linear-gradient(135deg,#1778a8 0%,#2f8f8b 42%,#78a93f 68%,#e0cf18 100%);
+  background:linear-gradient(135deg,rgba(5,150,105,.96),rgba(4,120,87,.96));
   color:#fff;
-  box-shadow:0 8px 30px rgba(0,0,0,.24);border-bottom:5px solid #111;
+  box-shadow:0 8px 30px rgba(4,120,87,.22);
 }
 .head{max-width:1500px;margin:auto;padding:14px 18px 12px}
 .headtop{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
-h1{font-size:22px;margin:0;font-weight:900;letter-spacing:.04em;text-shadow:0 2px 4px rgba(0,0,0,.45)}
+h1{font-size:22px;margin:0;font-weight:900;letter-spacing:.03em}
 .status{
   display:flex;align-items:center;gap:8px;flex-wrap:wrap;
   padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.10);
@@ -72,7 +72,7 @@ nav button{
 }
 nav button:hover{background:rgba(255,255,255,.10)}
 nav button.active{
-  background:#f3df24;color:#111;
+  background:#fff;color:var(--emerald-3);
   box-shadow:0 8px 18px rgba(0,0,0,.13)
 }
 main{max-width:1500px;margin:auto;padding:22px 18px 36px}
@@ -114,7 +114,7 @@ input:focus,select:focus,textarea:focus{
 }
 .btn:hover{transform:translateY(-1px)}
 .primary{
-  background:linear-gradient(135deg,#1d8fbf,#4f9f62 58%,#d9c91d);
+  background:linear-gradient(135deg,var(--emerald),var(--emerald-2));
   color:#fff;box-shadow:0 8px 18px rgba(16,185,129,.22)
 }
 .primary:hover{box-shadow:0 12px 24px rgba(16,185,129,.28)}
@@ -218,7 +218,7 @@ input:focus,select:focus,textarea:focus{
 .x{border:0;border-radius:6px;background:#fff;color:#b42318;font-weight:900}
 .login{
   position:fixed;inset:0;z-index:100;
-  background:radial-gradient(circle at top,rgba(29,143,191,.30),transparent 35%),linear-gradient(135deg,rgba(13,49,65,.92),rgba(22,22,22,.92));
+  background:radial-gradient(circle at top,rgba(16,185,129,.24),transparent 35%),rgba(5,39,30,.84);
   backdrop-filter:blur(8px);
   display:flex;align-items:center;justify-content:center;padding:18px
 }
@@ -264,7 +264,7 @@ input:focus,select:focus,textarea:focus{
 </div>
 
 <header><div class="head">
- <div class="headtop"><div><h1>浜脇AC│トレーニングメニュー</h1><div style="height:4px;width:190px;margin-top:6px;border-radius:999px;background:linear-gradient(90deg,#1d8fbf,#62a34a,#f1dc22,#111)"></div></div>
+ <div class="headtop"><h1>HAMAWAKI AC｜Training Manager</h1>
   <div class="status"><span id="dot" class="dot"></span><span id="dbstatus">確認中</span><span id="savestatus"></span><button id="logout" class="btn secondary small" style="display:none">ログアウト</button></div>
  </div>
  <nav>

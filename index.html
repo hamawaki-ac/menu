@@ -4,38 +4,252 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>陸上部 練習メニュー管理</title>
+
 <style>
 :root{
-  --emerald:#00a878;--emerald-dark:#007a5a;--bg:#f4f7f6;--panel:#fff;
-  --text:#18211f;--muted:#667085;--line:#dbe6e2;--danger:#c92a2a;
-  --overall:#2563eb;--strength:#16a34a;--sprint:#ef4444;--hurdle:#f97316;
-  --jump:#8b5cf6;--throw:#a16207;--distance:#0891b2;
+  --emerald:#10b981;
+  --emerald-2:#059669;
+  --emerald-3:#047857;
+  --emerald-soft:#ecfdf5;
+  --bg:#f5f8f7;
+  --panel:rgba(255,255,255,.92);
+  --text:#16211d;
+  --muted:#6b7280;
+  --line:#dfe8e4;
+  --danger:#dc2626;
+  --shadow:0 18px 50px rgba(15,83,64,.10);
+  --shadow-sm:0 8px 24px rgba(15,83,64,.08);
+  --radius:20px;
+  --overall:#3b82f6;
+  --strength:#22c55e;
+  --sprint:#ef4444;
+  --hurdle:#f97316;
+  --jump:#8b5cf6;
+  --throw:#b7791f;
+  --distance:#06b6d4;
 }
-*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;background:var(--bg);color:var(--text)}
-button,input,select,textarea{font:inherit}button{cursor:pointer}
-header{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,#00b884,var(--emerald-dark));color:#fff;box-shadow:0 3px 18px #0003}
-.head{max-width:1500px;margin:auto;padding:12px 16px}.headtop{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-h1{font-size:20px;margin:0}.status{display:flex;align-items:center;gap:8px;font-size:12px}.dot{width:9px;height:9px;border-radius:50%;background:#ffd43b}.dot.online{background:#69db7c}.dot.offline{background:#ff8787}
-nav{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:10px}nav button{border:1px solid #ffffff55;background:#ffffff18;color:#fff;border-radius:9px;padding:8px 5px;font-weight:800;font-size:12px}nav button.active{background:#fff;color:var(--emerald-dark)}
-main{max-width:1500px;margin:auto;padding:16px}.view{display:none}.view.active{display:block}
-.panel{background:#fff;border:1px solid var(--line);border-radius:15px;padding:16px;margin-bottom:15px;box-shadow:0 9px 25px #183c2d12}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.builder{display:grid;grid-template-columns:280px 1fr;gap:14px}.sticky{position:sticky;top:112px;align-self:start}
-.field{margin-bottom:11px}label{display:block;font-size:13px;font-weight:800;margin-bottom:5px}input,select,textarea{width:100%;border:1px solid #cad7d2;border-radius:9px;padding:9px;background:#fff}textarea{min-height:80px}
-input:focus,select:focus,textarea:focus{outline:0;border-color:var(--emerald);box-shadow:0 0 0 3px #00a87822}
-.actions{display:flex;gap:7px;flex-wrap:wrap}.btn{border:0;border-radius:9px;padding:9px 12px;font-weight:800}.primary{background:var(--emerald);color:#fff}.secondary{background:#e4f7f0;color:#075f49}.danger{background:#fff0f0;color:var(--danger);border:1px solid #ffd1d1}.small{padding:6px 8px;font-size:12px}
-.notice{background:#effbf6;border:1px solid #bce9d7;border-radius:10px;padding:10px;margin-bottom:12px;color:#17654e}
-.legend{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}.chip{display:inline-flex;gap:5px;align-items:center;padding:5px 8px;border-radius:999px;font-weight:800;font-size:12px;background:var(--soft);color:var(--cat)}.chip i{width:9px;height:9px;border-radius:50%;background:var(--cat)}
-.cat-overall{--cat:var(--overall);--soft:#dbeafe}.cat-strength{--cat:var(--strength);--soft:#dcfce7}.cat-sprint{--cat:var(--sprint);--soft:#fee2e2}.cat-hurdle{--cat:var(--hurdle);--soft:#ffedd5}.cat-jump{--cat:var(--jump);--soft:#ede9fe}.cat-throw{--cat:var(--throw);--soft:#fef3c7}.cat-distance{--cat:var(--distance);--soft:#cffafe}
-.section{border:2px solid color-mix(in srgb,var(--cat) 25%,white);border-radius:12px;overflow:hidden;margin-bottom:11px}.section h3{margin:0;padding:10px 12px;background:var(--soft);color:var(--cat);font-size:15px}.picker{display:grid;grid-template-columns:1fr auto;gap:7px;padding:9px;border-bottom:1px solid var(--line)}.picker select{border-left:6px solid var(--cat);background:var(--soft)}
-.items{padding:9px}.item{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:center;border-left:6px solid var(--cat);background:linear-gradient(90deg,var(--soft),#fff 40%);padding:8px;border-radius:8px;margin-bottom:6px}.item small{color:var(--muted)}
-.menu-list{display:grid;gap:9px}.menu{border:1px solid var(--line);border-left:7px solid var(--cat);border-radius:11px;padding:11px;background:linear-gradient(90deg,var(--soft),#fff 32%)}.menu h4{margin:0 0 5px}.meta{color:var(--muted);font-size:12px;margin:5px 0}
-.toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-.empty{padding:16px;text-align:center;color:#98a2b3;border:1px dashed #ccd8d3;border-radius:9px}
-.week-wrap{overflow:auto;max-height:calc(100vh - 190px);border:1px solid var(--line);border-radius:12px}.week{border-collapse:separate;border-spacing:0;min-width:1450px;width:100%}.week th,.week td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:7px;vertical-align:top}.week thead th{position:sticky;top:0;z-index:5;background:#e9faf3;min-width:180px}.week thead th:first-child{left:0;z-index:7}.week tbody th{position:sticky;left:0;z-index:4;min-width:190px;background:var(--soft);color:var(--cat);border-left:7px solid var(--cat)}.weekcell{min-height:105px}.weekitem{display:grid;grid-template-columns:1fr auto;gap:5px;background:var(--soft);border-left:5px solid var(--cat);padding:5px 6px;border-radius:7px;margin-top:5px;font-size:12px;font-weight:800}.x{border:0;border-radius:5px;background:#fff9;color:#b42318;font-weight:900}
-.login{position:fixed;inset:0;z-index:100;background:#082d258c;display:flex;align-items:center;justify-content:center;padding:16px}.login.hidden{display:none}.loginbox{background:#fff;border-radius:16px;padding:21px;width:min(430px,100%);box-shadow:0 20px 60px #0005}.loginbox h2{margin:0 0 5px}.muted{color:var(--muted)}
-@media(max-width:900px){nav{grid-template-columns:repeat(2,1fr)}.grid2,.builder{grid-template-columns:1fr}.sticky{position:static}.filters{grid-template-columns:1fr}.week-wrap{max-height:none}}
-@media print{header,.no-print,.login{display:none!important}body{background:#fff}.panel{box-shadow:none}.view{display:none!important}.view.print{display:block!important}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;
+  background:
+    radial-gradient(circle at top left,rgba(16,185,129,.09),transparent 30%),
+    radial-gradient(circle at top right,rgba(59,130,246,.07),transparent 28%),
+    var(--bg);
+  color:var(--text);
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+header{
+  position:sticky;
+  top:0;
+  z-index:30;
+  backdrop-filter:blur(18px);
+  background:linear-gradient(135deg,rgba(5,150,105,.96),rgba(4,120,87,.96));
+  color:#fff;
+  box-shadow:0 8px 30px rgba(4,120,87,.22);
+}
+.head{max-width:1500px;margin:auto;padding:14px 18px 12px}
+.headtop{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+h1{font-size:22px;margin:0;font-weight:900;letter-spacing:.03em}
+.status{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.16);font-size:12px
+}
+.dot{width:9px;height:9px;border-radius:50%;background:#facc15;box-shadow:0 0 0 4px rgba(250,204,21,.14)}
+.dot.online{background:#86efac;box-shadow:0 0 0 4px rgba(134,239,172,.14)}
+.dot.offline{background:#fca5a5;box-shadow:0 0 0 4px rgba(252,165,165,.14)}
+nav{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;
+  padding:5px;border-radius:15px;background:rgba(255,255,255,.08)
+}
+nav button{
+  border:1px solid transparent;background:transparent;color:#eafff7;
+  border-radius:11px;padding:10px 8px;font-weight:800;font-size:13px;
+  transition:.2s ease
+}
+nav button:hover{background:rgba(255,255,255,.10)}
+nav button.active{
+  background:#fff;color:var(--emerald-3);
+  box-shadow:0 8px 18px rgba(0,0,0,.13)
+}
+main{max-width:1500px;margin:auto;padding:22px 18px 36px}
+.view{display:none}.view.active{display:block}
+.panel{
+  background:var(--panel);
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(223,232,228,.95);
+  border-radius:var(--radius);
+  padding:20px;
+  margin-bottom:18px;
+  box-shadow:var(--shadow);
+}
+.panel h2{margin-top:0;font-size:21px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.builder{display:grid;grid-template-columns:300px 1fr;gap:18px}
+.sticky{position:sticky;top:126px;align-self:start}
+.field{margin-bottom:13px}
+label{
+  display:block;font-size:12px;font-weight:900;margin-bottom:6px;
+  color:#35534a;letter-spacing:.03em
+}
+input,select,textarea{
+  width:100%;border:1px solid #cadad4;border-radius:12px;
+  padding:11px 12px;background:rgba(255,255,255,.96);color:var(--text);
+  transition:.2s ease
+}
+textarea{min-height:88px;resize:vertical}
+input:hover,select:hover,textarea:hover{border-color:#9ed7c3}
+input:focus,select:focus,textarea:focus{
+  outline:0;border-color:var(--emerald);
+  box-shadow:0 0 0 4px rgba(16,185,129,.13);
+  background:#fff
+}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{
+  border:0;border-radius:11px;padding:10px 14px;font-weight:900;
+  transition:.2s ease;box-shadow:none
+}
+.btn:hover{transform:translateY(-1px)}
+.primary{
+  background:linear-gradient(135deg,var(--emerald),var(--emerald-2));
+  color:#fff;box-shadow:0 8px 18px rgba(16,185,129,.22)
+}
+.primary:hover{box-shadow:0 12px 24px rgba(16,185,129,.28)}
+.secondary{background:#eaf8f2;color:#08684d}
+.secondary:hover{background:#dff5ec}
+.danger{background:#fff1f2;color:var(--danger);border:1px solid #fecdd3}
+.small{padding:7px 9px;font-size:12px}
+.notice{
+  background:linear-gradient(135deg,#effcf7,#f8fffc);
+  border:1px solid #bcebd8;border-radius:14px;padding:12px 14px;
+  margin-bottom:14px;color:#16624c;box-shadow:var(--shadow-sm)
+}
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.chip{
+  display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;
+  font-weight:900;font-size:12px;background:var(--soft);color:var(--cat);
+  border:1px solid color-mix(in srgb,var(--cat) 22%,white)
+}
+.chip i{width:9px;height:9px;border-radius:50%;background:var(--cat)}
+.cat-overall{--cat:var(--overall);--soft:#e8f1ff}
+.cat-strength{--cat:var(--strength);--soft:#e9fbea}
+.cat-sprint{--cat:var(--sprint);--soft:#fff0f0}
+.cat-hurdle{--cat:var(--hurdle);--soft:#fff3e8}
+.cat-jump{--cat:var(--jump);--soft:#f3edff}
+.cat-throw{--cat:var(--throw);--soft:#fff8df}
+.cat-distance{--cat:var(--distance);--soft:#e6fbff}
+.section{
+  border:1px solid color-mix(in srgb,var(--cat) 23%,white);
+  border-radius:16px;overflow:hidden;margin-bottom:14px;
+  background:#fff;box-shadow:var(--shadow-sm)
+}
+.section h3{
+  margin:0;padding:12px 14px;background:linear-gradient(90deg,var(--soft),#fff);
+  color:var(--cat);font-size:15px;border-bottom:1px solid color-mix(in srgb,var(--cat) 18%,white)
+}
+.picker{display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px;background:#fbfefd}
+.picker select{border-left:6px solid var(--cat);background:var(--soft)}
+.items{padding:10px}
+.item{
+  display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;
+  border:1px solid color-mix(in srgb,var(--cat) 16%,white);
+  border-left:6px solid var(--cat);
+  background:linear-gradient(90deg,var(--soft),#fff 42%);
+  padding:10px;border-radius:11px;margin-bottom:7px
+}
+.item small{color:var(--muted)}
+.menu-list{display:grid;gap:12px}
+.menu{
+  position:relative;
+  display:grid;
+  grid-template-columns:48px minmax(0,1fr);
+  border:1px solid color-mix(in srgb,var(--cat) 18%,white);
+  border-radius:16px;
+  padding:0;overflow:hidden;background:#fff;
+  box-shadow:var(--shadow-sm);
+  transition:.2s ease
+}
+.menu:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(15,83,64,.12)}
+.menu-rail{
+  background:linear-gradient(180deg,color-mix(in srgb,var(--cat) 88%,white),var(--cat));
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:10px 4px;font-size:12px;font-weight:900;letter-spacing:.12em;
+  writing-mode:vertical-rl;text-orientation:upright;min-height:138px
+}
+.menu-content{
+  padding:15px 16px;
+  background:linear-gradient(90deg,var(--soft),#fff 42%)
+}
+.menu h4{margin:0 0 7px;font-size:17px}
+.meta{color:var(--muted);font-size:12px;margin:7px 0;line-height:1.6}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.filters{
+  display:grid;grid-template-columns:240px 1fr;gap:10px;margin-bottom:13px;
+  padding:12px;border-radius:14px;background:#f7fbf9;border:1px solid var(--line)
+}
+.empty{padding:18px;text-align:center;color:#98a2b3;border:1px dashed #c7d6d1;border-radius:12px;background:#fbfdfc}
+.week-wrap{
+  overflow:auto;max-height:calc(100vh - 205px);
+  border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:var(--shadow-sm)
+}
+.week{border-collapse:separate;border-spacing:0;min-width:1450px;width:100%}
+.week th,.week td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px;vertical-align:top}
+.week thead th{
+  position:sticky;top:0;z-index:5;background:linear-gradient(180deg,#f0fcf7,#e7f8f1);
+  min-width:180px;color:#245548
+}
+.week thead th:first-child{left:0;z-index:7}
+.week tbody th{
+  position:sticky;left:0;z-index:4;min-width:190px;
+  background:linear-gradient(90deg,var(--soft),#fff);
+  color:var(--cat);border-left:7px solid var(--cat);font-weight:900
+}
+.weekcell{min-height:108px}
+.weekitem{
+  display:grid;grid-template-columns:1fr auto;gap:5px;
+  background:linear-gradient(90deg,var(--soft),#fff);
+  border:1px solid color-mix(in srgb,var(--cat) 18%,white);
+  border-left:5px solid var(--cat);padding:6px 7px;border-radius:8px;
+  margin-top:6px;font-size:12px;font-weight:800
+}
+.x{border:0;border-radius:6px;background:#fff;color:#b42318;font-weight:900}
+.login{
+  position:fixed;inset:0;z-index:100;
+  background:radial-gradient(circle at top,rgba(16,185,129,.24),transparent 35%),rgba(5,39,30,.84);
+  backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;padding:18px
+}
+.login.hidden{display:none}
+.loginbox{
+  background:rgba(255,255,255,.97);border:1px solid rgba(255,255,255,.7);
+  border-radius:24px;padding:26px;width:min(440px,100%);
+  box-shadow:0 28px 80px rgba(0,0,0,.28)
+}
+.loginbox h2{margin:0 0 6px;font-size:24px}
+.muted{color:var(--muted)}
+@media(max-width:900px){
+  nav{grid-template-columns:repeat(2,1fr)}
+  .grid2,.builder{grid-template-columns:1fr}
+  .sticky{position:static}
+  .filters{grid-template-columns:1fr}
+  .week-wrap{max-height:none}
+  .menu{grid-template-columns:38px minmax(0,1fr)}
+  .menu-rail{font-size:11px;min-height:118px}
+  main{padding:15px 12px 28px}
+  .panel{padding:15px;border-radius:16px}
+}
+@media print{
+  header,.no-print,.login{display:none!important}
+  body{background:#fff}
+  .panel,.menu,.section{box-shadow:none}
+  .view{display:none!important}
+  .view.print{display:block!important}
+}
 </style>
+
 </head>
 <body>
 <div id="login" class="login hidden">
@@ -50,15 +264,14 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--emerald);bo
 </div>
 
 <header><div class="head">
- <div class="headtop"><h1>陸上部 練習メニュー管理</h1>
+ <div class="headtop"><h1>HAMAWAKI AC｜Training Manager</h1>
   <div class="status"><span id="dot" class="dot"></span><span id="dbstatus">確認中</span><span id="savestatus"></span><button id="logout" class="btn secondary small" style="display:none">ログアウト</button></div>
  </div>
  <nav>
   <button class="active" data-view="today">今日・一覧</button>
   <button data-view="daily">日別作成</button>
   <button data-view="weekly">週間入力</button>
-  <button data-view="menus">メニュー一覧</button>
-  <button data-view="register">メニュー登録</button>
+  <button data-view="menus">メニュー管理</button>
  </nav>
 </div></header>
 
@@ -96,15 +309,7 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--emerald);bo
 </section>
 
 <section id="v-menus" class="view">
- <div class="panel"><h2>メニュー一覧</h2>
-  <div class="legend" id="legend"></div>
-  <div class="filters no-print"><select id="filterCat"></select><input id="filterText" placeholder="検索"></div>
-  <div id="menuList" class="menu-list"></div>
- </div>
-</section>
-
-<section id="v-register" class="view">
- <div class="panel"><h2 id="formTitle">メニュー登録</h2><input id="editId" type="hidden">
+ <div class="panel"><h2 id="formTitle">メニュー登録・編集</h2><p class="muted" style="margin-top:-6px">新しい練習メニューの作成と既存メニューの編集を行います。</p><input id="editId" type="hidden">
   <div class="grid2">
    <div>
     <div class="field"><label>メニュー名</label><input id="name"></div>
@@ -122,6 +327,11 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--emerald);bo
    </div>
   </div>
   <div class="actions"><button id="saveMenu" class="btn primary">保存</button><button id="resetMenu" class="btn secondary">リセット</button></div>
+ </div>
+ <div class="panel"><h2>登録済みメニュー一覧</h2><p class="muted" style="margin-top:-6px">種目ごとに色分けして表示しています。</p>
+  <div class="legend" id="legend"></div>
+  <div class="filters no-print"><select id="filterCat"></select><input id="filterText" placeholder="検索"></div>
+  <div id="menuList" class="menu-list"></div>
  </div>
 </section>
 </main>
@@ -208,7 +418,7 @@ el("editDay").onclick=()=>openDay(el("todayDate").value);el("todayDate").onchang
 
 function renderMenus(){
  const c=el("filterCat").value,q=el("filterText").value.toLowerCase(),list=menus.filter(m=>(!c||m.category===c)&&(!q||(m.name+" "+m.detail+" "+m.target).toLowerCase().includes(q)));
- el("menuList").innerHTML=list.length?list.map(m=>`<div class="menu ${cls(m.category)}"><h4>${esc(m.name)}</h4><span class="chip ${cls(m.category)}"><i></i>${esc(m.category)}</span>${m.detail?`<p>${esc(m.detail)}</p>`:""}<div class="meta">${esc([m.sets,m.intensity,m.rest,m.duration,m.target].filter(Boolean).join("／"))}</div><div class="actions"><button class="btn secondary small" onclick="editMenu('${m.id}')">編集</button><button class="btn danger small" onclick="deleteMenu('${m.id}')">削除</button></div></div>`).join(""):`<div class="empty">該当なし</div>`
+ el("menuList").innerHTML=list.length?list.map(m=>`<div class="menu ${cls(m.category)}"><div class="menu-rail">${esc(m.category.replace("メニュー",""))}</div><div class="menu-content"><h4>${esc(m.name)}</h4><span class="chip ${cls(m.category)}"><i></i>${esc(m.category)}</span>${m.detail?`<p>${esc(m.detail)}</p>`:""}<div class="meta">${esc([m.sets,m.intensity,m.rest,m.duration,m.target].filter(Boolean).join("／"))}</div><div class="actions"><button class="btn secondary small" onclick="editMenu('${m.id}')">編集</button><button class="btn danger small" onclick="deleteMenu('${m.id}')">削除</button></div></div></div>`).join(""):`<div class="empty">該当なし</div>`
 }
 el("filterCat").oninput=renderMenus;el("filterText").oninput=renderMenus;
 
@@ -216,10 +426,10 @@ function menuFormData(){
  return{id:el("editId").value||crypto.randomUUID(),name:el("name").value.trim(),category:el("category").value,placement:el("placement").value,detail:el("detail").value.trim(),sets:el("sets").value.trim(),intensity:el("intensity").value.trim(),rest:el("rest").value.trim(),duration:el("duration").value.trim(),target:el("target").value.trim(),caution:el("caution").value.trim()}
 }
 async function saveMenuDoc(m){const i=menus.findIndex(x=>x.id===m.id);if(i>=0)menus[i]=m;else menus.push(m);localSave();renderAll();if(cloud)await db.collection("teams").doc(TEAM_ID).collection("menus").doc(m.id).set({...m,updatedBy:user.email,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});markSaved()}
-el("saveMenu").onclick=async()=>{const m=menuFormData();if(!m.name)return alert("メニュー名を入力してください");await saveMenuDoc(m);resetMenu();nav("menus")}
-function resetMenu(){["editId","name","detail","sets","intensity","rest","duration","target","caution"].forEach(i=>el(i).value="");el("category").value=CATS[0];el("placement").value="middle";el("formTitle").textContent="メニュー登録"}
+el("saveMenu").onclick=async()=>{const m=menuFormData();if(!m.name)return alert("メニュー名を入力してください");await saveMenuDoc(m);resetMenu();nav("menus");setTimeout(()=>el("menuList").scrollIntoView({behavior:"smooth",block:"start"}),50)}
+function resetMenu(){["editId","name","detail","sets","intensity","rest","duration","target","caution"].forEach(i=>el(i).value="");el("category").value=CATS[0];el("placement").value="middle";el("formTitle").textContent="メニュー登録・編集"}
 el("resetMenu").onclick=resetMenu;
-window.editMenu=id=>{const m=menus.find(x=>x.id===id);if(!m)return;Object.entries({editId:m.id,name:m.name,category:m.category,placement:m.placement,detail:m.detail,sets:m.sets,intensity:m.intensity,rest:m.rest,duration:m.duration,target:m.target,caution:m.caution}).forEach(([k,v])=>el(k).value=v||"");el("formTitle").textContent="メニュー編集";nav("register")}
+window.editMenu=id=>{const m=menus.find(x=>x.id===id);if(!m)return;Object.entries({editId:m.id,name:m.name,category:m.category,placement:m.placement,detail:m.detail,sets:m.sets,intensity:m.intensity,rest:m.rest,duration:m.duration,target:m.target,caution:m.caution}).forEach(([k,v])=>el(k).value=v||"");el("formTitle").textContent="メニュー編集";nav("menus");setTimeout(()=>el("formTitle").scrollIntoView({behavior:"smooth",block:"start"}),50)}
 window.deleteMenu=async id=>{const m=menus.find(x=>x.id===id);if(!m||!confirm("削除しますか？"))return;menus=menus.filter(x=>x.id!==id);Object.values(days).forEach(d=>SECTIONS.forEach(s=>d.sections[s.id]=(d.sections[s.id]||[]).filter(x=>x!==id)));localSave();renderAll();if(cloud){await db.collection("teams").doc(TEAM_ID).collection("menus").doc(id).delete();const batch=db.batch();Object.entries(days).forEach(([date,d])=>batch.set(db.collection("teams").doc(TEAM_ID).collection("days").doc(date),d,{merge:true}));await batch.commit()}markSaved("削除済み")}
 
 function loadWeek(){weekDraft={};for(let i=0;i<7;i++){const d=addDays(weekStart,i);weekDraft[d]=days[d]?structuredClone(days[d]):blankDay()}}

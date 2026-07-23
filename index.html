@@ -556,14 +556,15 @@ html,body{max-width:100%;overflow-x:hidden}
   #printRoot{
     display:block!important;
     position:static!important;
-    width:100%!important;
-    max-width:none!important;
-    margin:0!important;
+    width:198mm!important;
+    max-width:198mm!important;
+    margin:0 auto!important;
     padding:0!important;
     box-sizing:border-box!important;
     overflow:visible!important;
-    zoom:1!important;
+    zoom:var(--one-page-scale,1)!important;
     transform:none!important;
+    transform-origin:top center!important;
     color:#111!important;
     background:#fff!important;
     -webkit-print-color-adjust:exact!important;
@@ -590,7 +591,8 @@ html,body{max-width:100%;overflow-x:hidden}
   #printRoot .today-subtitle{padding:5px 8px!important;font-size:10.5pt!important;}
   #printRoot .today-subitems{padding:4px!important;gap:4px!important;}
   #printRoot .today-menu-row{padding:6px 8px!important;font-size:10pt!important;line-height:1.35!important;break-inside:avoid!important;page-break-inside:avoid!important;}
-  #printRoot .today-menu-row small{font-size:8.5pt!important;line-height:1.3!important;}
+  #printRoot .today-menu-row small{font-size:8.5pt!important;line-height:1.25!important;}
+  #printRoot .today-menu-caution{font-size:8pt!important;line-height:1.22!important;margin-top:2px!important;color:#333!important;}
   #printRoot .today-menu-time{font-size:8.5pt!important;padding:3px 6px!important;}
   #printRoot h2{font-size:15pt!important;margin:2px 0!important;}
   #printRoot p{margin:2px 0!important;font-size:10pt!important;}
@@ -940,6 +942,32 @@ function dayHTML(date,day){
   <p class="muted">最終更新：${esc(day.updatedBy||"")}</p>`;
 }
 
+function mmToPx(mm){
+ const probe=document.createElement("div");
+ probe.style.cssText=`position:absolute;left:-9999px;top:-9999px;width:${mm}mm;height:1mm;visibility:hidden;`;
+ document.body.appendChild(probe);
+ const px=probe.getBoundingClientRect().width;
+ probe.remove();
+ return px;
+}
+function fitPrintRootToOneA4Page(root){
+ // A4縦 297mm - 上下余白6mm×2 = 印刷可能高285mm。
+ // Chromeの丸め誤差を避けるため2mm分の安全余白を持たせる。
+ const printableHeight=mmToPx(283);
+ const printableWidth=mmToPx(198);
+ root.style.setProperty("--one-page-scale","1");
+ root.style.zoom="1";
+ void root.offsetHeight;
+
+ const naturalHeight=root.scrollHeight;
+ const naturalWidth=root.scrollWidth;
+ let scale=Math.min(1, printableHeight/naturalHeight, printableWidth/naturalWidth);
+ // 1日分を必ず1ページに収める。
+ // 内容が多い日は必要な分だけ自動縮小する。
+ scale=Math.max(0.1, Math.floor(scale*1000)/1000);
+ root.style.setProperty("--one-page-scale",String(scale));
+ root.dataset.printScale=String(scale);
+}
 function prepareOnePagePrint(){
  cleanupOnePagePrint();
  const content=el("todayContent");
@@ -956,9 +984,8 @@ function prepareOnePagePrint(){
  root.style.background="#fff";
  document.body.appendChild(root);
 
- // 印刷時はA4の横幅をそのまま使用する。
- // 内容が多い場合は、ブラウザの通常のページ分割に任せる。
- void root.offsetHeight;
+ // その日の全情報をA4 1ページ内に収めるため、内容量に応じて自動縮小する。
+ fitPrintRootToOneA4Page(root);
  root.style.position="static";
  root.style.left="auto";
 }
@@ -1002,7 +1029,11 @@ el("editDay").onclick=()=>openDay(el("todayDate").value);el("todayDate").onchang
  prepareOnePagePrint();
  setTimeout(()=>window.print(),120);
 };
-window.addEventListener("beforeprint",()=>{if(!document.getElementById("printRoot"))prepareOnePagePrint()});
+window.addEventListener("beforeprint",()=>{
+ if(!document.getElementById("printRoot"))prepareOnePagePrint();
+ const root=document.getElementById("printRoot");
+ if(root)fitPrintRootToOneA4Page(root);
+});
 window.addEventListener("afterprint",cleanupOnePagePrint);
 
 function renderMenus(){

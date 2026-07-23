@@ -278,7 +278,7 @@ input:focus,select:focus,textarea:focus{
 <main>
 <section id="v-today" class="view active">
  <div class="panel">
-  <div class="toolbar no-print"><input id="todayDate" type="date" style="width:auto"><div class="actions"><button id="editDay" class="btn secondary">この日を編集</button><button id="printDay" class="btn primary">印刷</button></div></div>
+  <div class="toolbar no-print"><input id="todayDate" type="date" style="width:auto"><div class="actions"><button id="editDay" class="btn secondary viewer-hide">この日を編集</button><button id="printDay" class="btn primary">印刷</button></div></div>
   <div id="todayContent"></div>
  </div>
  <div class="panel"><h2>作成済み練習一覧</h2><div id="dayList"></div></div>
@@ -357,7 +357,7 @@ const SECTIONS=[
 {id:"afterOverall",label:"練習後半：全体",cat:"全体メニュー（後半）"}
 ];
 let menus=[],days={},daily=blankDay(),weekStart=getMonday(todayISO()),weekDraft={};
-let db=null,auth=null,user=null,cloud=false,unsubMenus=null,unsubDays=null;
+let db=null,auth=null,user=null,currentRole=null,cloud=false,unsubMenus=null,unsubDays=null;
 
 function el(id){return document.getElementById(id)}
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
@@ -386,7 +386,49 @@ function migrateMenuCategories(list){
 function localSave(){localStorage.setItem("coachMenus",JSON.stringify(menus));localStorage.setItem("coachDays",JSON.stringify(days))}
 function markSaved(t="保存済み"){el("savestatus").textContent=t+" "+new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}
 
-function nav(view){document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));el("v-"+view).classList.add("active");document.querySelector(`nav button[data-view="${view}"]`).classList.add("active");scrollTo(0,0)}
+
+function canEditApp(){
+ return currentRole==="admin" || currentRole==="editor";
+}
+
+function applyRoleUI(){
+ const viewer=currentRole==="viewer";
+
+ document.querySelectorAll('nav button[data-view="daily"], nav button[data-view="weekly"], nav button[data-view="menus"]')
+  .forEach(btn=>btn.style.display=viewer?"none":"");
+
+ if(viewer){
+  nav("today");
+ }
+
+ const editDayButton=el("editDay");
+ if(editDayButton) editDayButton.style.display=viewer?"none":"";
+
+ document.querySelectorAll(".viewer-hide").forEach(node=>{
+  node.style.display=viewer?"none":"";
+ });
+
+ const statusText=el("savestatus");
+ if(statusText && user){
+  const roleLabel=currentRole==="admin"?"管理者":currentRole==="editor"?"編集者":currentRole==="viewer"?"閲覧専用":"";
+  statusText.textContent=`${user.email}${roleLabel?`（${roleLabel}）`:""}`;
+ }
+}
+
+async function loadCurrentRole(){
+ if(!db || !user) return;
+ try{
+  const member=await db.collection("teams").doc(TEAM_ID).collection("members").doc(user.uid).get();
+  currentRole=member.exists ? member.data().role : null;
+  applyRoleUI();
+ }catch(error){
+  console.error("role load error",error);
+  currentRole=null;
+  applyRoleUI();
+ }
+}
+
+function nav(view){if(currentRole==="viewer"&&view!=="today")view="today";document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));el("v-"+view).classList.add("active");const activeBtn=document.querySelector(`nav button[data-view="${view}"]`);if(activeBtn)activeBtn.classList.add("active");scrollTo(0,0)}
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>nav(b.dataset.view));
 
 function fillBasics(){
@@ -418,8 +460,8 @@ async function saveDayDoc(date,data){
 }
 async function deleteDayDoc(date){delete days[date];localSave();renderAll();if(cloud)await db.collection("teams").doc(TEAM_ID).collection("days").doc(date).delete();markSaved("削除済み")}
 
-el("saveDay").onclick=async()=>{const d=el("dailyDate").value;if(!d)return alert("日付を選択してください");daily.theme=el("theme").value.trim();daily.notes=el("notes").value.trim();await saveDayDoc(d,daily);alert("保存しました")}
-el("deleteDay").onclick=async()=>{const d=el("dailyDate").value;if(days[d]&&confirm(fmt(d)+"を削除しますか？")){await deleteDayDoc(d);loadDay(d)}}
+el("saveDay").onclick=async()=>{if(!canEditApp())return alert("閲覧専用アカウントでは編集できません。");const d=el("dailyDate").value;if(!d)return alert("日付を選択してください");daily.theme=el("theme").value.trim();daily.notes=el("notes").value.trim();await saveDayDoc(d,daily);alert("保存しました")}
+el("deleteDay").onclick=async()=>{if(!canEditApp())return alert("閲覧専用アカウントでは削除できません。");const d=el("dailyDate").value;if(days[d]&&confirm(fmt(d)+"を削除しますか？")){await deleteDayDoc(d);loadDay(d)}}
 el("copyPrev").onclick=()=>{const d=addDays(el("dailyDate").value,-1);if(!days[d])return alert("前日のデータがありません");daily=structuredClone(days[d]);el("theme").value=(daily.theme||"")+"（コピー）";daily.theme=el("theme").value;el("notes").value=daily.notes||"";renderDaily()}
 
 function dayHTML(date,day){
@@ -427,8 +469,8 @@ function dayHTML(date,day){
  const blocks=SECTIONS.map(s=>{const a=day.sections?.[s.id]||[];if(!a.length)return"";return `<div class="section ${cls(s.cat)}"><h3>${esc(s.label)}</h3><div class="items">${a.map(id=>{const m=menus.find(x=>x.id===id);return m?`<div class="item ${cls(m.category)}"><div><b>${esc(m.name)}</b>${m.detail?`<br><small>${esc(m.detail)}</small>`:""}</div></div>`:""}).join("")}</div></div>`}).join("");
  return `<h2>${fmt(date)}</h2>${day.theme?`<p><b>テーマ：</b>${esc(day.theme)}</p>`:""}${blocks}${day.notes?`<p><b>連絡：</b>${esc(day.notes)}</p>`:""}<p class="muted">最終更新：${esc(day.updatedBy||"")}</p>`
 }
-function renderToday(){const d=el("todayDate").value;el("todayContent").innerHTML=dayHTML(d,days[d]);const list=Object.keys(days).sort().reverse();el("dayList").innerHTML=list.length?list.map(x=>`<div class="panel">${dayHTML(x,days[x])}<div class="actions no-print"><button class="btn secondary small" onclick="openDay('${x}')">編集</button></div></div>`).join(""):`<div class="empty">まだありません</div>`}
-window.openDay=d=>{el("dailyDate").value=d;loadDay(d);nav("daily")}
+function renderToday(){const d=el("todayDate").value;el("todayContent").innerHTML=dayHTML(d,days[d]);const list=Object.keys(days).sort().reverse();el("dayList").innerHTML=list.length?list.map(x=>`<div class="panel">${dayHTML(x,days[x])}<div class="actions no-print"><button class="btn secondary small viewer-hide" onclick="openDay('${x}')">編集</button></div></div>`).join(""):`<div class="empty">まだありません</div>`}
+window.openDay=d=>{if(!canEditApp())return;el("dailyDate").value=d;loadDay(d);nav("daily")}
 el("editDay").onclick=()=>openDay(el("todayDate").value);el("todayDate").onchange=renderToday;el("printDay").onclick=()=>{el("v-today").classList.add("print");print();setTimeout(()=>el("v-today").classList.remove("print"),300)}
 
 function renderMenus(){
@@ -441,11 +483,11 @@ function menuFormData(){
  return{id:el("editId").value||crypto.randomUUID(),name:el("name").value.trim(),category:el("category").value,detail:el("detail").value.trim(),sets:el("sets").value.trim(),intensity:el("intensity").value.trim(),rest:el("rest").value.trim(),duration:el("duration").value.trim(),target:el("target").value.trim(),caution:el("caution").value.trim()}
 }
 async function saveMenuDoc(m){const i=menus.findIndex(x=>x.id===m.id);if(i>=0)menus[i]=m;else menus.push(m);localSave();renderAll();if(cloud)await db.collection("teams").doc(TEAM_ID).collection("menus").doc(m.id).set({...m,updatedBy:user.email,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});markSaved()}
-el("saveMenu").onclick=async()=>{const m=menuFormData();if(!m.name)return alert("メニュー名を入力してください");await saveMenuDoc(m);resetMenu();nav("menus");setTimeout(()=>el("menuList").scrollIntoView({behavior:"smooth",block:"start"}),50)}
+el("saveMenu").onclick=async()=>{if(!canEditApp())return alert("閲覧専用アカウントでは編集できません。");const m=menuFormData();if(!m.name)return alert("メニュー名を入力してください");await saveMenuDoc(m);resetMenu();nav("menus");setTimeout(()=>el("menuList").scrollIntoView({behavior:"smooth",block:"start"}),50)}
 function resetMenu(){["editId","name","detail","sets","intensity","rest","duration","target","caution"].forEach(i=>el(i).value="");el("category").value=CATS[0];el("formTitle").textContent="メニュー登録・編集"}
 el("resetMenu").onclick=resetMenu;
 window.editMenu=id=>{const m=menus.find(x=>x.id===id);if(!m)return;Object.entries({editId:m.id,name:m.name,category:m.category,detail:m.detail,sets:m.sets,intensity:m.intensity,rest:m.rest,duration:m.duration,target:m.target,caution:m.caution}).forEach(([k,v])=>el(k).value=v||"");el("formTitle").textContent="メニュー編集";nav("menus");setTimeout(()=>el("formTitle").scrollIntoView({behavior:"smooth",block:"start"}),50)}
-window.deleteMenu=async id=>{const m=menus.find(x=>x.id===id);if(!m||!confirm("削除しますか？"))return;menus=menus.filter(x=>x.id!==id);Object.values(days).forEach(d=>SECTIONS.forEach(s=>d.sections[s.id]=(d.sections[s.id]||[]).filter(x=>x!==id)));localSave();renderAll();if(cloud){await db.collection("teams").doc(TEAM_ID).collection("menus").doc(id).delete();const batch=db.batch();Object.entries(days).forEach(([date,d])=>batch.set(db.collection("teams").doc(TEAM_ID).collection("days").doc(date),d,{merge:true}));await batch.commit()}markSaved("削除済み")}
+window.deleteMenu=async id=>{if(!canEditApp())return alert("閲覧専用アカウントでは削除できません。");const m=menus.find(x=>x.id===id);if(!m||!confirm("削除しますか？"))return;menus=menus.filter(x=>x.id!==id);Object.values(days).forEach(d=>SECTIONS.forEach(s=>d.sections[s.id]=(d.sections[s.id]||[]).filter(x=>x!==id)));localSave();renderAll();if(cloud){await db.collection("teams").doc(TEAM_ID).collection("menus").doc(id).delete();const batch=db.batch();Object.entries(days).forEach(([date,d])=>batch.set(db.collection("teams").doc(TEAM_ID).collection("days").doc(date),d,{merge:true}));await batch.commit()}markSaved("削除済み")}
 
 function loadWeek(){weekDraft={};for(let i=0;i<7;i++){const d=addDays(weekStart,i);weekDraft[d]=days[d]?structuredClone(days[d]):blankDay()}}
 function renderWeek(){
@@ -458,9 +500,9 @@ window.removeWeek=(d,s,i)=>{weekDraft[d].sections[s].splice(i,1);renderWeek()}
 window.setWeekTheme=(d,v)=>weekDraft[d].theme=v;
 function shiftWeek(n){weekStart=addDays(weekStart,n*7);loadWeek();renderWeek()}
 el("prevWeek").onclick=()=>shiftWeek(-1);el("nextWeek").onclick=()=>shiftWeek(1);el("thisWeek").onclick=()=>{weekStart=getMonday(todayISO());loadWeek();renderWeek()};el("weekDate").onchange=e=>{weekStart=getMonday(e.target.value);loadWeek();renderWeek()}
-el("saveWeek").onclick=async()=>{if(cloud){const batch=db.batch();for(const [date,d] of Object.entries(weekDraft)){d.updatedBy=user.email;d.updatedAtText=new Date().toISOString();days[date]=structuredClone(d);batch.set(db.collection("teams").doc(TEAM_ID).collection("days").doc(date),{...d,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})}await batch.commit()}else Object.assign(days,structuredClone(weekDraft));localSave();renderAll();markSaved();alert("1週間を保存しました")}
+el("saveWeek").onclick=async()=>{if(!canEditApp())return alert("閲覧専用アカウントでは編集できません。");if(cloud){const batch=db.batch();for(const [date,d] of Object.entries(weekDraft)){d.updatedBy=user.email;d.updatedAtText=new Date().toISOString();days[date]=structuredClone(d);batch.set(db.collection("teams").doc(TEAM_ID).collection("days").doc(date),{...d,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})}await batch.commit()}else Object.assign(days,structuredClone(weekDraft));localSave();renderAll();markSaved();alert("1週間を保存しました")}
 
-function renderAll(){renderMenus();renderDaily();renderToday();renderWeek()}
+function renderAll(){renderMenus();renderDaily();renderToday();renderWeek();applyRoleUI()}
 function configured(){return window.FIREBASE_CONFIG?.apiKey&&!String(window.FIREBASE_CONFIG.apiKey).includes("ここに")}
 function startRealtime(){
  if(unsubMenus)unsubMenus();if(unsubDays)unsubDays();
@@ -503,7 +545,7 @@ async function init(){
  if(!configured()){setStatus("未接続・端末保存","offline");return}
  try{
   firebase.initializeApp(window.FIREBASE_CONFIG);auth=firebase.auth();db=firebase.firestore();cloud=true;
-  auth.onAuthStateChanged(u=>{user=u;if(u){el("login").classList.add("hidden");el("logout").style.display="";setStatus("リアルタイム接続","online");el("savestatus").textContent=u.email;startRealtime();syncStarterMenus()}else{el("login").classList.remove("hidden");el("logout").style.display="none";setStatus("ログイン待ち","")}})
+  auth.onAuthStateChanged(u=>{user=u;if(u){el("login").classList.add("hidden");el("logout").style.display="";setStatus("リアルタイム接続","online");el("savestatus").textContent=u.email;loadCurrentRole();startRealtime();syncStarterMenus()}else{currentRole=null;el("login").classList.remove("hidden");el("logout").style.display="none";setStatus("ログイン待ち","")}})
  }catch(e){console.error(e);setStatus("接続エラー","offline")}
 }
 el("loginBtn").onclick=async()=>{try{el("loginMsg").textContent="ログイン中";await auth.signInWithEmailAndPassword(el("email").value.trim(),el("password").value);el("loginMsg").textContent=""}catch(e){el("loginMsg").textContent="ログインできませんでした"}}

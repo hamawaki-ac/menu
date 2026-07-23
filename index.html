@@ -554,22 +554,17 @@ html,body{max-width:100%;overflow-x:hidden}
   }
   body > *:not(#printRoot){display:none!important;}
   #printRoot{
-    display:block!important;
-    position:static!important;
-    width:198mm!important;
-    max-width:198mm!important;
-    margin:0 auto!important;
-    padding:0!important;
-    box-sizing:border-box!important;
-    overflow:visible!important;
-    zoom:var(--one-page-scale,1)!important;
-    transform:none!important;
-    transform-origin:top center!important;
-    color:#111!important;
-    background:#fff!important;
-    -webkit-print-color-adjust:exact!important;
-    print-color-adjust:exact!important;
+    display:block!important; position:static!important; width:198mm!important; max-width:198mm!important;
+    margin:0 auto!important; padding:0!important; overflow:visible!important; background:#fff!important; color:#111!important;
   }
+  #printRoot .print-page{
+    display:block!important; width:198mm!important; max-width:198mm!important; min-height:0!important;
+    margin:0 auto!important; padding:0!important; box-sizing:border-box!important;
+    zoom:var(--page-scale,1)!important; transform-origin:top center!important;
+    break-after:page!important; page-break-after:always!important;
+    -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important;
+  }
+  #printRoot .print-page:last-child{break-after:auto!important;page-break-after:auto!important;}
   #printRoot *{
     -webkit-print-color-adjust:exact!important;
     print-color-adjust:exact!important;
@@ -583,7 +578,7 @@ html,body{max-width:100%;overflow-x:hidden}
     border-bottom:1.5px solid #111;
   }
   #printRoot .panel{box-shadow:none!important;border:0!important;margin:0!important;padding:0!important;}
-  #printRoot .today-board{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;align-items:start!important;gap:6px!important;margin-top:6px!important;}
+  #printRoot .today-board{display:block!important;margin-top:6px!important;}
   #printRoot .today-major{min-width:0!important;}
   #printRoot .today-major{box-shadow:none!important;margin:0!important;break-inside:avoid!important;page-break-inside:avoid!important;}
   #printRoot .today-major-title{padding:8px 10px!important;font-size:13pt!important;}
@@ -951,35 +946,53 @@ function mmToPx(mm){
  probe.remove();
  return px;
 }
-function fitPrintRootToOneA4Page(root){
- // A4縦 297mm - 上下余白6mm×2 = 印刷可能高285mm。
- // Chromeの丸め誤差を避けるため2mm分の安全余白を持たせる。
+function fitPrintPageToA4(page){
+ // 各ページをA4縦1ページに収める。内容が多い場合だけ縮小する。
  const printableHeight=mmToPx(283);
  const printableWidth=mmToPx(198);
- root.style.setProperty("--one-page-scale","1");
- root.style.zoom="1";
- void root.offsetHeight;
-
- const naturalHeight=root.scrollHeight;
- const naturalWidth=root.scrollWidth;
+ page.style.setProperty("--page-scale","1");
+ page.style.zoom="1";
+ void page.offsetHeight;
+ const naturalHeight=page.scrollHeight;
+ const naturalWidth=page.scrollWidth;
  let scale=Math.min(1, printableHeight/naturalHeight, printableWidth/naturalWidth);
- // 極端な縮小を避けつつ、必ず1日分を1ページに収める。
  scale=Math.max(0.48, Math.floor(scale*1000)/1000);
- root.style.setProperty("--one-page-scale",String(scale));
- root.dataset.printScale=String(scale);
+ page.style.setProperty("--page-scale",String(scale));
+ page.dataset.printScale=String(scale);
 }
 function prepareOnePagePrint(){
  cleanupOnePagePrint();
  const content=el("todayContent");
  if(!content)return;
 
+ const source=document.createElement("div");
+ source.innerHTML=content.innerHTML;
+ const majors=source.querySelectorAll(".today-major");
+ if(majors.length<2)return;
+
+ const makePage=(major,index)=>{
+  const page=document.createElement("section");
+  page.className="print-page";
+  const headerParts=[];
+  source.querySelectorAll(":scope > h2, :scope > p:not(.muted), :scope > .today-summary").forEach(n=>headerParts.push(n.outerHTML));
+  const copy=major.cloneNode(true);
+  const title=copy.querySelector(".today-major-title > span:first-child");
+  if(title)title.textContent=index===0?"全体練習":"専門練習";
+  page.innerHTML=`<div class="print-sheet-title">浜脇AC｜トレーニングメニュー</div>${headerParts.join("")}<div class="today-board">${copy.outerHTML}</div>`;
+  // 連絡事項と最終更新は2ページ目の末尾にまとめる。
+  if(index===1){
+   const notice=source.querySelector(":scope > .notice");
+   const muted=source.querySelector(":scope > p.muted");
+   if(notice)page.insertAdjacentHTML("beforeend",notice.outerHTML);
+   if(muted)page.insertAdjacentHTML("beforeend",muted.outerHTML);
+  }
+  return page;
+ };
+
  const root=document.createElement("div");
  root.id="printRoot";
- root.innerHTML=`<div class="print-sheet-title">浜脇AC｜トレーニングメニュー</div><div class="panel">${content.innerHTML}</div>`;
- // 印刷時は左列を全体メニュー、右列を専門メニューとして固定表示する。
- const printMajors=root.querySelectorAll(".today-major-title > span:first-child");
- if(printMajors[0]) printMajors[0].textContent="全体メニュー";
- if(printMajors[1]) printMajors[1].textContent="専門メニュー";
+ root.appendChild(makePage(majors[0],0));
+ root.appendChild(makePage(majors[1],1));
  root.style.position="absolute";
  root.style.left="-10000px";
  root.style.top="0";
@@ -987,9 +1000,7 @@ function prepareOnePagePrint(){
  root.style.width="198mm";
  root.style.background="#fff";
  document.body.appendChild(root);
-
- // その日の全情報をA4 1ページ内に収めるため、内容量に応じて自動縮小する。
- fitPrintRootToOneA4Page(root);
+ root.querySelectorAll(".print-page").forEach(fitPrintPageToA4);
  root.style.position="static";
  root.style.left="auto";
 }

@@ -788,6 +788,46 @@ header,
 }
 </style>
 
+
+<style id="mobile-date-overflow-fix">
+/* iPhone Safari: 日付入力が親要素より横に広がる問題を防止 */
+@media (max-width:700px){
+  #v-daily .field,
+  #v-daily .panel,
+  #v-daily .builder,
+  #v-today .toolbar {
+    min-width:0 !important;
+    max-width:100% !important;
+  }
+
+  #dailyDate,
+  #todayDate,
+  #weekDate {
+    display:block !important;
+    width:100% !important;
+    inline-size:100% !important;
+    min-width:0 !important;
+    min-inline-size:0 !important;
+    max-width:100% !important;
+    max-inline-size:100% !important;
+    box-sizing:border-box !important;
+  }
+
+  /* iOSのdate入力が持つ独自の最小幅を解除 */
+  #dailyDate {
+    -webkit-appearance:none !important;
+    appearance:none !important;
+    overflow:hidden !important;
+  }
+
+  #dailyDate::-webkit-date-and-time-value {
+    min-width:0 !important;
+    width:100% !important;
+    text-align:left !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div id="login" class="login hidden">

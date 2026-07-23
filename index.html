@@ -540,83 +540,188 @@ html,body{max-width:100%;overflow-x:hidden}
 
 
 <style id="final-print-style">
-@page{size:A4 portrait;margin:7mm;}
 @page{size:A4 portrait;margin:6mm}
 @media print{
   html,body{
     margin:0!important;
     padding:0!important;
-    width:auto!important;
+    width:100%!important;
     height:auto!important;
-    min-height:0!important;
     overflow:visible!important;
     background:#fff!important;
   }
+
   body > *:not(#printRoot){display:none!important;}
+
   #printRoot{
-    display:block!important; position:static!important; width:198mm!important; max-width:198mm!important;
-    margin:0 auto!important; padding:0!important; overflow:visible!important; background:#fff!important; color:#111!important;
+    display:block!important;
+    position:static!important;
+    width:198mm!important;
+    max-width:198mm!important;
+    margin:0 auto!important;
+    padding:0!important;
+    background:#fff!important;
+    color:#111!important;
+    overflow:visible!important;
   }
+
+  /*
+    1 logical print page = exactly 1 physical sheet.
+    The inner content is absolutely positioned so Chrome cannot push a large
+    "break-inside:avoid" block onto another sheet and create blank/header-only pages.
+  */
   #printRoot .print-page{
     display:block!important;
     position:relative!important;
     width:198mm!important;
-    max-width:198mm!important;
-    height:285mm!important;
-    min-height:285mm!important;
-    max-height:285mm!important;
-    margin:0 auto!important;
+    height:284mm!important;
+    min-height:284mm!important;
+    max-height:284mm!important;
+    margin:0!important;
     padding:0!important;
     box-sizing:border-box!important;
     overflow:hidden!important;
-    zoom:1!important;
-    transform:none!important;
     break-after:page!important;
     page-break-after:always!important;
-    break-inside:avoid!important;
-    page-break-inside:avoid!important;
+    break-inside:auto!important;
+    page-break-inside:auto!important;
     -webkit-print-color-adjust:exact!important;
     print-color-adjust:exact!important;
   }
+
+  #printRoot .print-page:last-child{
+    break-after:auto!important;
+    page-break-after:auto!important;
+  }
+
   #printRoot .print-page-inner{
-    display:block!important;
+    position:absolute!important;
+    left:0!important;
+    top:0!important;
     width:100%!important;
+    margin:0!important;
+    padding:0!important;
     transform-origin:top left!important;
     transform:scale(var(--content-scale,1))!important;
+    overflow:visible!important;
   }
-  #printRoot .print-page:last-child{break-after:auto!important;page-break-after:auto!important;}
+
   #printRoot *{
     -webkit-print-color-adjust:exact!important;
     print-color-adjust:exact!important;
   }
+
   #printRoot .print-sheet-title{
-    text-align:center;
-    font-size:16pt;
-    font-weight:900;
-    margin:0 0 5mm;
-    padding-bottom:3mm;
-    border-bottom:1.5px solid #111;
+    text-align:center!important;
+    font-size:15pt!important;
+    font-weight:900!important;
+    margin:0 0 3mm!important;
+    padding:2.2mm 2mm!important;
+    border:0!important;
+    color:#07131a!important;
   }
-  #printRoot .panel{box-shadow:none!important;border:0!important;margin:0!important;padding:0!important;}
-  #printRoot .today-board{display:block!important;margin-top:6px!important;}
-  #printRoot .today-major{min-width:0!important;}
-  #printRoot .today-major{box-shadow:none!important;margin:0!important;break-inside:avoid!important;page-break-inside:avoid!important;}
-  #printRoot .today-major-title{padding:8px 10px!important;font-size:13pt!important;}
-  #printRoot .today-major-body{padding:6px!important;gap:5px!important;}
-  #printRoot .today-subsection{break-inside:avoid!important;page-break-inside:avoid!important;}
-  #printRoot .today-subtitle{padding:5px 8px!important;font-size:10.5pt!important;}
-  #printRoot .today-subitems{padding:4px!important;gap:4px!important;}
-  #printRoot .today-menu-row{padding:6px 8px!important;font-size:10pt!important;line-height:1.35!important;break-inside:avoid!important;page-break-inside:avoid!important;}
-  #printRoot .today-menu-row small{font-size:8.5pt!important;line-height:1.25!important;}
-  #printRoot .today-menu-caution{font-size:8pt!important;line-height:1.22!important;margin-top:2px!important;color:#333!important;}
-  #printRoot .today-menu-time{font-size:8.5pt!important;padding:3px 6px!important;}
-  #printRoot h2{font-size:15pt!important;margin:2px 0!important;}
-  #printRoot p{margin:2px 0!important;font-size:10pt!important;}
-  #printRoot .today-summary{margin:5px 0!important;gap:4px!important;}
-  #printRoot .today-summary span{padding:4px 7px!important;font-size:8.5pt!important;}
-  #printRoot .notice{margin-top:6px!important;padding:7px 9px!important;font-size:10pt!important;}
-  #printRoot .muted{font-size:8pt!important;}
-  #printRoot button,#printRoot .actions,#printRoot .no-print{display:none!important;}
+
+  #printRoot h2{
+    font-size:14pt!important;
+    margin:1.5mm 0 0.7mm!important;
+  }
+
+  #printRoot p{
+    margin:.5mm 0!important;
+    font-size:9.5pt!important;
+  }
+
+  #printRoot .today-summary{
+    margin:1.5mm 0 2mm!important;
+    gap:1mm!important;
+  }
+
+  #printRoot .today-summary span{
+    padding:1mm 1.8mm!important;
+    font-size:8pt!important;
+  }
+
+  #printRoot .today-board{
+    display:block!important;
+    margin:0!important;
+  }
+
+  #printRoot .today-major,
+  #printRoot .today-subsection,
+  #printRoot .today-menu-row{
+    break-inside:auto!important;
+    page-break-inside:auto!important;
+  }
+
+  #printRoot .today-major{
+    min-width:0!important;
+    box-shadow:none!important;
+    margin:0!important;
+  }
+
+  #printRoot .today-major-title{
+    padding:2mm 2.5mm!important;
+    font-size:12pt!important;
+  }
+
+  #printRoot .today-major-body{
+    padding:1.5mm!important;
+    gap:1.1mm!important;
+  }
+
+  #printRoot .today-subtitle{
+    padding:1.3mm 2mm!important;
+    font-size:9.5pt!important;
+  }
+
+  #printRoot .today-subitems{
+    padding:1mm!important;
+    gap:.9mm!important;
+  }
+
+  #printRoot .today-menu-row{
+    padding:1.4mm 1.8mm!important;
+    font-size:9pt!important;
+    line-height:1.25!important;
+  }
+
+  #printRoot .today-menu-row strong{
+    font-size:9pt!important;
+  }
+
+  #printRoot .today-menu-row small{
+    font-size:7.6pt!important;
+    line-height:1.2!important;
+  }
+
+  #printRoot .today-menu-caution{
+    font-size:7.3pt!important;
+    line-height:1.18!important;
+    margin-top:.6mm!important;
+    color:#333!important;
+  }
+
+  #printRoot .today-menu-time{
+    font-size:7.5pt!important;
+    padding:.7mm 1.3mm!important;
+  }
+
+  #printRoot .notice{
+    margin-top:1.5mm!important;
+    padding:1.8mm 2.2mm!important;
+    font-size:8.5pt!important;
+  }
+
+  #printRoot .muted{
+    margin-top:1mm!important;
+    font-size:7.2pt!important;
+  }
+
+  #printRoot button,
+  #printRoot .actions,
+  #printRoot .no-print{
+    display:none!important;
+  }
 }
 </style>
 
@@ -1008,18 +1113,21 @@ function mmToPx(mm){
 function fitPrintPageToA4(page){
  const inner=page.querySelector(".print-page-inner");
  if(!inner)return;
- const printableHeight=mmToPx(284);
- const printableWidth=mmToPx(198);
+
+ // Measure the source content before printing.
  inner.style.setProperty("--content-scale","1");
  inner.style.width="100%";
  void inner.offsetHeight;
- const naturalHeight=inner.scrollHeight;
- const naturalWidth=inner.scrollWidth;
- let scale=Math.min(1, printableHeight/naturalHeight, printableWidth/naturalWidth);
- scale=Math.max(0.42, Math.floor(scale*1000)/1000);
+
+ const maxH=mmToPx(279); // safety margin inside 284 mm physical page
+ const maxW=mmToPx(196);
+ const h=Math.max(inner.scrollHeight,1);
+ const w=Math.max(inner.scrollWidth,1);
+
+ let scale=Math.min(1,maxH/h,maxW/w);
+ scale=Math.max(0.34,Math.floor(scale*1000)/1000);
+
  inner.style.setProperty("--content-scale",String(scale));
- // Scaling the inner wrapper prevents one logical page from spilling onto a second sheet.
- if(scale<1) inner.style.width=(100/scale)+"%";
  page.dataset.printScale=String(scale);
 }
 function prepareOnePagePrint(){
@@ -1034,7 +1142,7 @@ function prepareOnePagePrint(){
 
  const makePage=(major,index)=>{
   const page=document.createElement("section");
-  page.className="print-page";
+  page.className="print-page "+(index===0?"print-overall-page":"print-specialist-page");
   const headerParts=[];
   source.querySelectorAll(":scope > h2, :scope > p:not(.muted), :scope > .today-summary").forEach(n=>headerParts.push(n.outerHTML));
   const copy=major.cloneNode(true);

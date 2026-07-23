@@ -535,53 +535,62 @@ html,body{max-width:100%;overflow-x:hidden}
 
 <style id="final-print-style">
 @page{size:A4 portrait;margin:7mm;}
+@page{size:A4 portrait;margin:6mm}
 @media print{
   html,body{
-    width:210mm!important;
-    min-height:0!important;
-    height:auto!important;
     margin:0!important;
     padding:0!important;
+    width:auto!important;
+    height:auto!important;
+    min-height:0!important;
     overflow:visible!important;
     background:#fff!important;
   }
-  body *{visibility:hidden!important;}
-  #printArea,#printArea *{visibility:visible!important;}
-  #printArea{
-    position:static!important;
+  body > *:not(#printRoot){display:none!important;}
+  #printRoot{
     display:block!important;
-    width:196mm!important;
-    max-width:196mm!important;
-    min-height:0!important;
-    height:auto!important;
+    position:static!important;
+    width:198mm!important;
+    max-width:198mm!important;
     margin:0 auto!important;
     padding:0!important;
     overflow:visible!important;
-    page-break-before:avoid!important;
-    page-break-after:avoid!important;
-    break-before:avoid-page!important;
-    break-after:avoid-page!important;
-    transform:none!important;
+    zoom:var(--print-zoom,1);
+    color:#111!important;
+    background:#fff!important;
+    -webkit-print-color-adjust:exact!important;
+    print-color-adjust:exact!important;
   }
-  #printArea .panel,
-  #printArea .today-major,
-  #printArea .today-subsection,
-  #printArea .today-menu-row{
-    break-inside:avoid!important;
-    page-break-inside:avoid!important;
+  #printRoot *{
+    -webkit-print-color-adjust:exact!important;
+    print-color-adjust:exact!important;
   }
-  header,nav,.no-print,.login,#createdList,.created-list,.actions,button{display:none!important;}
-  #printArea .panel{box-shadow:none!important;margin:0!important;padding:0!important;border:0!important;}
-  #printArea .today-board{gap:4px!important;margin-top:4px!important;}
-  #printArea .today-major-body{padding:4px!important;gap:4px!important;}
-  #printArea .today-subitems{padding:3px!important;gap:3px!important;}
-  #printArea .today-menu-row{padding:4px 5px!important;font-size:9pt!important;}
-  #printArea h1,#printArea h2,#printArea h3,#printArea p{margin-top:2px!important;margin-bottom:2px!important;}
-  #printArea .today-major-title{padding:6px 8px!important;font-size:12pt!important;}
-  #printArea .today-subtitle{padding:4px 6px!important;font-size:10pt!important;}
-  #printArea .today-summary{margin:3px 0!important;gap:3px!important;}
-  #printArea .today-summary span{padding:2px 5px!important;font-size:8pt!important;}
-  #printArea .notice{margin-top:4px!important;padding:4px 6px!important;}
+  #printRoot .print-sheet-title{
+    text-align:center;
+    font-size:14pt;
+    font-weight:900;
+    margin:0 0 3mm;
+    padding-bottom:2mm;
+    border-bottom:1.5px solid #111;
+  }
+  #printRoot .panel{box-shadow:none!important;border:0!important;margin:0!important;padding:0!important;}
+  #printRoot .today-board{gap:3px!important;margin-top:3px!important;}
+  #printRoot .today-major{box-shadow:none!important;margin:0!important;break-inside:avoid!important;page-break-inside:avoid!important;}
+  #printRoot .today-major-title{padding:5px 7px!important;font-size:10.5pt!important;}
+  #printRoot .today-major-body{padding:3px!important;gap:3px!important;}
+  #printRoot .today-subsection{break-inside:avoid!important;page-break-inside:avoid!important;}
+  #printRoot .today-subtitle{padding:3px 5px!important;font-size:8.5pt!important;}
+  #printRoot .today-subitems{padding:2px!important;gap:2px!important;}
+  #printRoot .today-menu-row{padding:3px 4px!important;font-size:7.5pt!important;line-height:1.25!important;break-inside:avoid!important;page-break-inside:avoid!important;}
+  #printRoot .today-menu-row small{font-size:6.8pt!important;line-height:1.2!important;}
+  #printRoot .today-menu-time{font-size:6.8pt!important;padding:2px 4px!important;}
+  #printRoot h2{font-size:12pt!important;margin:1px 0!important;}
+  #printRoot p{margin:1px 0!important;font-size:8pt!important;}
+  #printRoot .today-summary{margin:2px 0!important;gap:2px!important;}
+  #printRoot .today-summary span{padding:2px 4px!important;font-size:6.8pt!important;}
+  #printRoot .notice{margin-top:3px!important;padding:3px 5px!important;font-size:7.5pt!important;}
+  #printRoot .muted{font-size:6.8pt!important;}
+  #printRoot button,#printRoot .actions,#printRoot .no-print{display:none!important;}
 }
 </style>
 </head>
@@ -907,26 +916,35 @@ function dayHTML(date,day){
 }
 
 function prepareOnePagePrint(){
+ cleanupOnePagePrint();
  const content=el("todayContent");
  if(!content)return;
- document.body.classList.add("print-prep");
- el("v-today").classList.add("print");
- document.body.style.setProperty("--print-scale","1");
- content.style.removeProperty("transform");
- content.style.removeProperty("width");
- void content.offsetHeight;
+
+ const root=document.createElement("div");
+ root.id="printRoot";
+ root.innerHTML=`<div class="print-sheet-title">浜脇AC｜トレーニングメニュー</div><div class="panel">${content.innerHTML}</div>`;
+ root.style.position="absolute";
+ root.style.left="-10000px";
+ root.style.top="0";
+ root.style.display="block";
+ root.style.width="198mm";
+ root.style.background="#fff";
+ document.body.appendChild(root);
+
+ // A4の印刷可能高さに収まるよう、専用領域だけを縮小する。
+ void root.offsetHeight;
  const pxPerMm=96/25.4;
- const available=283*pxPerMm;
- const actual=content.scrollHeight;
- const scale=Math.max(0.42,Math.min(1,available/actual));
- document.body.style.setProperty("--print-scale",String(scale));
+ const availableHeight=285*pxPerMm;
+ const measuredHeight=root.scrollHeight;
+ const zoom=Math.max(0.45,Math.min(1,availableHeight/measuredHeight));
+ root.style.setProperty("--print-zoom",String(zoom));
+ root.style.position="static";
+ root.style.left="auto";
 }
 function cleanupOnePagePrint(){
- document.body.classList.remove("print-prep");
- document.body.style.removeProperty("--print-scale");
- el("v-today").classList.remove("print");
+ const root=document.getElementById("printRoot");
+ if(root)root.remove();
 }
-
 function dayHasContent(day){
  if(!day)return false;
  if((day.theme||"").trim()||(day.notes||"").trim())return true;
@@ -958,6 +976,7 @@ el("editDay").onclick=()=>openDay(el("todayDate").value);el("todayDate").onchang
  prepareOnePagePrint();
  setTimeout(()=>window.print(),120);
 };
+window.addEventListener("beforeprint",()=>{if(!document.getElementById("printRoot"))prepareOnePagePrint()});
 window.addEventListener("afterprint",cleanupOnePagePrint);
 
 function renderMenus(){

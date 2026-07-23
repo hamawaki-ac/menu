@@ -41,11 +41,10 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--emerald);bo
 <div id="login" class="login hidden">
  <div class="loginbox">
   <h2>コーチログイン</h2>
-  <p class="muted">同じチームにログインしたコーチ全員で、練習データを共有します。</p>
+  <p class="muted">管理者が登録したコーチアカウントでログインしてください。</p>
   <div class="field"><label>メールアドレス</label><input id="email" type="email"></div>
   <div class="field"><label>パスワード</label><input id="password" type="password"></div>
-  <button id="loginBtn" class="btn primary" style="width:100%">ログイン</button>
-  <button id="registerBtn" class="btn secondary" style="width:100%;margin-top:7px">コーチアカウント作成</button>
+  <button id="loginBtn" class="btn primary" style="width:100%">ログイン</button><p class="muted" style="margin-bottom:0">アカウント追加は管理者がFirebaseコンソールから行います。</p>
   <p id="loginMsg" class="muted"></p>
  </div>
 </div>
@@ -276,7 +275,6 @@ async function init(){
  }catch(e){console.error(e);setStatus("接続エラー","offline")}
 }
 el("loginBtn").onclick=async()=>{try{el("loginMsg").textContent="ログイン中";await auth.signInWithEmailAndPassword(el("email").value.trim(),el("password").value);el("loginMsg").textContent=""}catch(e){el("loginMsg").textContent="ログインできませんでした"}}
-el("registerBtn").onclick=async()=>{try{if(el("password").value.length<6)return el("loginMsg").textContent="パスワードは6文字以上です";await auth.createUserWithEmailAndPassword(el("email").value.trim(),el("password").value)}catch(e){el("loginMsg").textContent="アカウントを作成できませんでした"}}
 el("logout").onclick=()=>auth.signOut();
 init();
 </script>

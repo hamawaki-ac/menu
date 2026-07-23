@@ -1,8 +1,8 @@
 window.FIREBASE_CONFIG = {
-  apiKey: "ここにAPIキー",
-  authDomain: "ここにプロジェクトID.firebaseapp.com",
-  projectId: "ここにプロジェクトID",
-  storageBucket: "ここにプロジェクトID.firebasestorage.app",
-  messagingSenderId: "ここに送信者ID",
-  appId: "ここにアプリID"
+  apiKey: "AIzaSyD88NeTFnbp3PymHaTyF55BbTgK3QGKTjU",
+  authDomain: "hamawaki-ac-menu.firebaseapp.com",
+  projectId: "hamawaki-ac-menu",
+  storageBucket: "hamawaki-ac-menu.firebasestorage.app",
+  messagingSenderId: "754881407382",
+  appId: "1:754881407382:web:75f8eb5d95b33ce68095b7"
 };

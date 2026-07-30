@@ -871,6 +871,32 @@ header,
 }
 </style>
 
+
+<style id="print-title-unified-style">
+@media print {
+  #printRoot .print-sheet-title {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+  }
+  #printRoot .print-page-label {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 0 2.5mm !important;
+    padding: 1.8mm 2.5mm !important;
+    border-radius: 2.5mm !important;
+    font-size: 12pt !important;
+    font-weight: 900 !important;
+    text-align: center !important;
+    background: #eef8f4 !important;
+    border: .3mm solid #b8dfd1 !important;
+    color: #075f4b !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div id="login" class="login hidden">
@@ -1260,9 +1286,15 @@ function prepareOnePagePrint(){
   const headerParts=[];
   source.querySelectorAll(":scope > h2, :scope > p:not(.muted), :scope > .today-summary").forEach(n=>headerParts.push(n.outerHTML));
   const copy=major.cloneNode(true);
+  const pageLabel=index===0?"全体練習メニュー":"専門練習メニュー";
   const title=copy.querySelector(".today-major-title > span:first-child");
-  if(title)title.textContent=index===0?"全体練習":"専門練習";
-  page.innerHTML=`<div class="print-page-inner"><div class="print-sheet-title">浜脇AC｜トレーニングメニュー</div>${headerParts.join("")}<div class="today-board">${copy.outerHTML}</div></div>`;
+  if(title)title.textContent=pageLabel;
+  page.innerHTML=`<div class="print-page-inner">
+    <div class="print-sheet-title">浜脇AC｜トレーニングメニュー</div>
+    <div class="print-page-label">${pageLabel}</div>
+    ${headerParts.join("")}
+    <div class="today-board">${copy.outerHTML}</div>
+  </div>`;
   // 連絡事項と最終更新は2ページ目の末尾にまとめる。
   if(index===1){
    const notice=source.querySelector(":scope > .notice");

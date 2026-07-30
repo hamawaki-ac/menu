@@ -767,26 +767,6 @@ header,
 </style>
 
 
-<style id="today-print-toolbar-no-gradient">
-/* 今日・一覧：日付／この日を編集／印刷 の帯はグラデーションなし */
-.today-toolbar,
-.today-head,
-.today-header-actions,
-.today-date-actions,
-.today-controls,
-.day-toolbar {
-  background: #fff !important;
-  background-image: none !important;
-}
-
-/* 既存構造で上記クラスが付いていない場合の実要素 */
-#todayView .card > div:has(input[type="date"]):has(button),
-#todayPanel .card > div:has(input[type="date"]):has(button),
-[data-view="today"] .card > div:has(input[type="date"]):has(button) {
-  background: #fff !important;
-  background-image: none !important;
-}
-</style>
 
 
 <style id="mobile-date-overflow-fix">
@@ -980,6 +960,7 @@ const SECTIONS=[
 {id:"afterOverall",label:"練習後半：全体",cat:"全体メニュー（後半）"}
 ];
 let menus=[],days={},daily=blankDay(),weekStart=getMonday(todayISO()),weekDraft={},monthCursor=todayISO().slice(0,7),monthDraft={};
+let dailyDirty=false,weekDirty=false,monthDirty=false;
 let db=null,auth=null,user=null,currentRole=null,cloud=false,unsubMenus=null,unsubDays=null;
 
 
@@ -1040,7 +1021,7 @@ function canEditApp(){
 }
 
 function applyRoleUI(){
- const viewer=currentRole==="viewer";
+ const viewer=!canEditApp();
 
  document.querySelectorAll('nav button[data-view="daily"], nav button[data-view="weekly"], nav button[data-view="monthly"], nav button[data-view="menus"]')
   .forEach(btn=>btn.style.display=viewer?"none":"");
@@ -1095,23 +1076,26 @@ function renderDaily(){
   return `<div class="section ${cls(s.cat)}"><h3>${esc(s.label)}</h3><div class="picker"><select id="pick-${s.id}">${optionHTML(s)}</select><button class="btn primary small" onclick="addDaily('${s.id}')">追加</button></div><div class="items">${ids.length?ids.map((id,i)=>{const m=menus.find(x=>x.id===id);return m?`<div class="item ${cls(m.category)}"><div><b>${esc(m.name)}</b><br><small>${esc([m.sets,m.intensity,m.rest].filter(Boolean).join("／"))}</small></div><button class="btn danger small" onclick="removeDaily('${s.id}',${i})">削除</button></div>`:""}).join(""):`<div class="empty">未設定</div>`}</div></div>`
  }).join("")
 }
-window.addDaily=id=>{daily=normalizeDay(daily);const s=el("pick-"+id);if(s&&s.value){if(!Array.isArray(daily.sections[id]))daily.sections[id]=[];daily.sections[id].push(s.value);renderDaily()}}
-window.removeDaily=(id,i)=>{daily.sections[id].splice(i,1);renderDaily()}
+window.addDaily=id=>{daily=normalizeDay(daily);const s=el("pick-"+id);if(s&&s.value){if(!Array.isArray(daily.sections[id]))daily.sections[id]=[];daily.sections[id].push(s.value);dailyDirty=true;renderDaily()}}
+window.removeDaily=(id,i)=>{daily.sections[id].splice(i,1);dailyDirty=true;renderDaily()}
 
-function loadDay(date){daily=normalizeDay(days[date]);el("theme").value=daily.theme||"";el("notes").value=daily.notes||"";renderDaily()}
+function loadDay(date){daily=normalizeDay(days[date]);dailyDirty=false;el("theme").value=daily.theme||"";el("notes").value=daily.notes||"";renderDaily()}
 el("dailyDate").onchange=e=>loadDay(e.target.value);
+el("theme").addEventListener("input",()=>dailyDirty=true);
+el("notes").addEventListener("input",()=>dailyDirty=true);
 
 async function saveDayDoc(date,data){
  data={...normalizeDay(data),updatedBy:user?.email||"local",updatedAtText:new Date().toISOString()};
- days[date]=data;localSave();renderAll();
- if(cloud){await db.collection("teams").doc(TEAM_ID).collection("days").doc(date).set({...data,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})}
- markSaved()
+ if(cloud){
+  await db.collection("teams").doc(TEAM_ID).collection("days").doc(date).set({...data,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+ }
+ days[date]=data;dailyDirty=false;localSave();renderAll();markSaved();
 }
 async function deleteDayDoc(date){delete days[date];localSave();renderAll();if(cloud)await db.collection("teams").doc(TEAM_ID).collection("days").doc(date).delete();markSaved("削除済み")}
 
-el("saveDay").onclick=async()=>{if(!canEditApp())return alert("閲覧専用アカウントでは編集できません。");const d=el("dailyDate").value;if(!d)return alert("日付を選択してください");daily.theme=el("theme").value.trim();daily.notes=el("notes").value.trim();await saveDayDoc(d,daily);alert("保存しました")}
+el("saveDay").onclick=async()=>{if(!canEditApp())return alert("閲覧専用アカウントでは編集できません。");const d=el("dailyDate").value;if(!d)return alert("日付を選択してください");daily.theme=el("theme").value.trim();daily.notes=el("notes").value.trim();try{await saveDayDoc(d,daily);alert("保存しました")}catch(e){console.error(e);alert("保存に失敗しました。通信状態を確認して、もう一度保存してください。")}}
 el("deleteDay").onclick=async()=>{if(!canEditApp())return alert("閲覧専用アカウントでは削除できません。");const d=el("dailyDate").value;if(days[d]&&confirm(fmt(d)+"を削除しますか？")){await deleteDayDoc(d);loadDay(d)}}
-el("copyPrev").onclick=()=>{const d=addDays(el("dailyDate").value,-1);if(!days[d])return alert("前日のデータがありません");daily=structuredClone(days[d]);el("theme").value=(daily.theme||"")+"（コピー）";daily.theme=el("theme").value;el("notes").value=daily.notes||"";renderDaily()}
+el("copyPrev").onclick=()=>{const d=addDays(el("dailyDate").value,-1);if(!days[d])return alert("前日のデータがありません");daily=structuredClone(days[d]);el("theme").value=(daily.theme||"")+"（コピー）";daily.theme=el("theme").value;el("notes").value=daily.notes||"";dailyDirty=true;renderDaily()}
 
 function dayHTML(date,day){
  if(!day)return `<div class="empty">${fmt(date)}は未作成です</div>`;
@@ -1201,7 +1185,8 @@ function fitPrintPageToA4(page){
  // Use the full A4 printable width at all times.
  // Only reduce content when its HEIGHT would exceed one sheet.
  let scale=Math.min(1,maxH/h);
- scale=Math.max(0.34,Math.floor(scale*1000)/1000);
+ if(!Number.isFinite(scale)||scale<=0)scale=1;
+ scale=Math.max(0.001,Math.floor(scale*1000)/1000);
 
  inner.style.setProperty("--content-scale",String(scale));
  // Compensate the scaled width so the visible result still fills the sheet.
@@ -1305,14 +1290,17 @@ el("filterCat").oninput=renderMenus;el("filterText").oninput=renderMenus;
 function menuFormData(){
  return{id:el("editId").value||crypto.randomUUID(),name:el("name").value.trim(),category:el("category").value,detail:el("detail").value.trim(),sets:el("sets").value.trim(),intensity:el("intensity").value.trim(),rest:el("rest").value.trim(),duration:el("duration").value.trim(),target:el("target").value.trim(),caution:el("caution").value.trim()}
 }
-async function saveMenuDoc(m){const i=menus.findIndex(x=>x.id===m.id);if(i>=0)menus[i]=m;else menus.push(m);localSave();renderAll();if(cloud)await db.collection("teams").doc(TEAM_ID).collection("menus").doc(m.id).set({...m,updatedBy:user.email,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});markSaved()}
-el("saveMenu").onclick=async()=>{if(!canEditApp())return alert("閲覧専用アカウントでは編集できません。");const m=menuFormData();if(!m.name)return alert("メニュー名を入力してください");await saveMenuDoc(m);resetMenu();nav("menus");setTimeout(()=>el("menuList").scrollIntoView({behavior:"smooth",block:"start"}),50)}
+async function saveMenuDoc(m){
+ if(cloud)await db.collection("teams").doc(TEAM_ID).collection("menus").doc(m.id).set({...m,updatedBy:user.email,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+ const i=menus.findIndex(x=>x.id===m.id);if(i>=0)menus[i]=m;else menus.push(m);localSave();renderAll();markSaved();
+}
+el("saveMenu").onclick=async()=>{if(!canEditApp())return alert("閲覧専用アカウントでは編集できません。");const m=menuFormData();if(!m.name)return alert("メニュー名を入力してください");try{await saveMenuDoc(m);resetMenu();nav("menus");setTimeout(()=>el("menuList").scrollIntoView({behavior:"smooth",block:"start"}),50)}catch(e){console.error(e);alert("メニューの保存に失敗しました。通信状態を確認してください。")}}
 function resetMenu(){["editId","name","detail","sets","intensity","rest","duration","target","caution"].forEach(i=>el(i).value="");el("category").value=CATS[0];el("formTitle").textContent="メニュー登録・編集"}
 el("resetMenu").onclick=resetMenu;
 window.editMenu=id=>{const m=menus.find(x=>x.id===id);if(!m)return;Object.entries({editId:m.id,name:m.name,category:m.category,detail:m.detail,sets:m.sets,intensity:m.intensity,rest:m.rest,duration:m.duration,target:m.target,caution:m.caution}).forEach(([k,v])=>el(k).value=v||"");el("formTitle").textContent="メニュー編集";nav("menus");setTimeout(()=>el("formTitle").scrollIntoView({behavior:"smooth",block:"start"}),50)}
 window.deleteMenu=async id=>{if(!canEditApp())return alert("閲覧専用アカウントでは削除できません。");const m=menus.find(x=>x.id===id);if(!m||!confirm("削除しますか？"))return;menus=menus.filter(x=>x.id!==id);Object.entries(days).forEach(([date,d])=>{d=normalizeDay(d);SECTIONS.forEach(s=>d.sections[s.id]=d.sections[s.id].filter(x=>x!==id));days[date]=d});localSave();renderAll();if(cloud){await db.collection("teams").doc(TEAM_ID).collection("menus").doc(id).delete();const batch=db.batch();Object.entries(days).forEach(([date,d])=>batch.set(db.collection("teams").doc(TEAM_ID).collection("days").doc(date),d,{merge:true}));await batch.commit()}markSaved("削除済み")}
 
-function loadWeek(){weekDraft={};for(let i=0;i<7;i++){const d=addDays(weekStart,i);weekDraft[d]=normalizeDay(days[d])}}
+function loadWeek(){weekDraft={};for(let i=0;i<7;i++){const d=addDays(weekStart,i);weekDraft[d]=normalizeDay(days[d])}weekDirty=false}
 function renderWeek(){
  weekStart=getMonday(weekStart);
  const dates=Array.from({length:7},(_,i)=>addDays(weekStart,i));
@@ -1324,19 +1312,31 @@ function renderWeek(){
  el("weekHead").innerHTML=`<tr><th>区分</th>${dates.map(d=>`<th>${parseISO(d).toLocaleDateString("ja-JP",{timeZone:"UTC",month:"numeric",day:"numeric",weekday:"short"})}<input value="${esc(weekDraft[d].theme||"")}" placeholder="テーマ" onchange="setWeekTheme('${d}',this.value)" style="margin-top:5px;font-size:12px"></th>`).join("")}</tr>`;
  el("weekBody").innerHTML=SECTIONS.map(s=>`<tr><th class="${cls(s.cat)}">${esc(s.label)}</th>${dates.map(d=>{const ids=weekDraft[d].sections[s.id]||[];return `<td><div class="weekcell ${cls(s.cat)}"><div class="picker"><select id="w-${d}-${s.id}">${optionHTML(s)}</select><button class="btn primary small" onclick="addWeek('${d}','${s.id}')">追加</button></div>${ids.map((id,i)=>{const m=menus.find(x=>x.id===id);return m?`<div class="weekitem ${cls(m.category)}"><span>${esc(m.name)}</span><button class="x" onclick="removeWeek('${d}','${s.id}',${i})">×</button></div>`:""}).join("")}</div></td>`}).join("")}</tr>`).join("")
 }
-window.addWeek=(d,s)=>{const p=el(`w-${d}-${s}`);if(p.value){weekDraft[d].sections[s].push(p.value);renderWeek()}}
-window.removeWeek=(d,s,i)=>{weekDraft[d].sections[s].splice(i,1);renderWeek()}
-window.setWeekTheme=(d,v)=>weekDraft[d].theme=v;
+window.addWeek=(d,s)=>{const p=el(`w-${d}-${s}`);if(p.value){weekDraft[d].sections[s].push(p.value);weekDirty=true;renderWeek()}}
+window.removeWeek=(d,s,i)=>{weekDraft[d].sections[s].splice(i,1);weekDirty=true;renderWeek()}
+window.setWeekTheme=(d,v)=>{weekDraft[d].theme=v;weekDirty=true};
 function shiftWeek(n){weekStart=addDays(weekStart,n*7);loadWeek();renderWeek()}
 el("prevWeek").onclick=()=>shiftWeek(-1);el("nextWeek").onclick=()=>shiftWeek(1);el("thisWeek").onclick=()=>{weekStart=getMonday(todayISO());loadWeek();renderWeek()};el("weekDate").onchange=e=>{weekStart=getMonday(e.target.value);loadWeek();renderWeek()}
-el("saveWeek").onclick=async()=>{if(!canEditApp())return alert("閲覧専用アカウントでは編集できません。");if(cloud){const batch=db.batch();for(const [date,rawDay] of Object.entries(weekDraft)){const d=normalizeDay(rawDay);d.updatedBy=user.email;d.updatedAtText=new Date().toISOString();days[date]=structuredClone(d);batch.set(db.collection("teams").doc(TEAM_ID).collection("days").doc(date),{...d,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})}await batch.commit()}else Object.entries(weekDraft).forEach(([date,d])=>days[date]=normalizeDay(d));localSave();renderAll();markSaved();alert("1週間を保存しました")}
+el("saveWeek").onclick=async()=>{
+ if(!canEditApp())return alert("閲覧専用アカウントでは編集できません。");
+ try{
+  const changed=Object.entries(weekDraft).filter(([date,d])=>dayHasContent(d)||dayHasContent(days[date]));
+  if(cloud){
+   const batch=db.batch();
+   for(const [date,rawDay] of changed){const d=normalizeDay(rawDay);d.updatedBy=user.email;d.updatedAtText=new Date().toISOString();batch.set(db.collection("teams").doc(TEAM_ID).collection("days").doc(date),{...d,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})}
+   if(changed.length)await batch.commit();
+  }
+  changed.forEach(([date,rawDay])=>days[date]=normalizeDay(rawDay));
+  weekDirty=false;localSave();renderAll();markSaved();alert("1週間を保存しました");
+ }catch(e){console.error(e);alert("1週間の保存に失敗しました。通信状態を確認してください。")}
+}
 
 function monthDates(month){
  const [y,m]=month.split("-").map(Number);
  const last=new Date(Date.UTC(y,m,0)).getUTCDate();
  return Array.from({length:last},(_,i)=>`${y}-${String(m).padStart(2,"0")}-${String(i+1).padStart(2,"0")}`);
 }
-function loadMonth(){monthDraft={};monthDates(monthCursor).forEach(d=>monthDraft[d]=normalizeDay(days[d]))}
+function loadMonth(){monthDraft={};monthDates(monthCursor).forEach(d=>monthDraft[d]=normalizeDay(days[d]));monthDirty=false}
 function renderMonth(){
  const dates=monthDates(monthCursor);
  if(!Object.keys(monthDraft).length||!monthDraft[dates[0]])loadMonth();
@@ -1358,8 +1358,8 @@ function renderMonth(){
  }).join("");
  el("monthGrid").innerHTML=weekdays+blanks+cells;
 }
-window.setMonthTheme=(d,v)=>{monthDraft[d].theme=v};
-window.setMonthNotes=(d,v)=>{monthDraft[d].notes=v};
+window.setMonthTheme=(d,v)=>{monthDraft[d].theme=v;monthDirty=true};
+window.setMonthNotes=(d,v)=>{monthDraft[d].notes=v;monthDirty=true};
 window.openMonthDay=d=>{el("dailyDate").value=d;loadDay(d);nav("daily")};
 function shiftMonth(n){const [y,m]=monthCursor.split("-").map(Number);const d=new Date(Date.UTC(y,m-1+n,1));monthCursor=`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,"0")}`;loadMonth();renderMonth()}
 el("prevMonth").onclick=()=>shiftMonth(-1);
@@ -1368,13 +1368,16 @@ el("thisMonth").onclick=()=>{monthCursor=todayISO().slice(0,7);loadMonth();rende
 el("monthDate").onchange=e=>{if(!e.target.value)return;monthCursor=e.target.value;loadMonth();renderMonth()};
 el("saveMonth").onclick=async()=>{
  if(!canEditApp())return alert("閲覧専用アカウントでは編集できません。");
- const changed=Object.entries(monthDraft).filter(([date,d])=>dayHasContent(d)||dayHasContent(days[date]));
- if(cloud){
-  const batch=db.batch();
-  changed.forEach(([date,rawDay])=>{const d=normalizeDay(rawDay);d.updatedBy=user.email;d.updatedAtText=new Date().toISOString();days[date]=structuredClone(d);batch.set(db.collection("teams").doc(TEAM_ID).collection("days").doc(date),{...d,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})});
-  await batch.commit();
- }else changed.forEach(([date,d])=>days[date]=normalizeDay(d));
- localSave();renderAll();markSaved("1か月保存済み");alert("1か月を保存しました");
+ try{
+  const changed=Object.entries(monthDraft).filter(([date,d])=>dayHasContent(d)||dayHasContent(days[date]));
+  if(cloud){
+   const batch=db.batch();
+   changed.forEach(([date,rawDay])=>{const d=normalizeDay(rawDay);d.updatedBy=user.email;d.updatedAtText=new Date().toISOString();batch.set(db.collection("teams").doc(TEAM_ID).collection("days").doc(date),{...d,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})});
+   if(changed.length)await batch.commit();
+  }
+  changed.forEach(([date,d])=>days[date]=normalizeDay(d));
+  monthDirty=false;localSave();renderAll();markSaved("1か月保存済み");alert("1か月を保存しました");
+ }catch(e){console.error(e);alert("1か月の保存に失敗しました。通信状態を確認してください。")}
 };
 
 function renderAll(){renderMenus();renderDaily();renderToday();renderWeek();renderMonth();applyRoleUI()}
@@ -1382,36 +1385,27 @@ function configured(){return window.FIREBASE_CONFIG?.apiKey&&!String(window.FIRE
 function startRealtime(){
  if(unsubMenus)unsubMenus();if(unsubDays)unsubDays();
  unsubMenus=db.collection("teams").doc(TEAM_ID).collection("menus").onSnapshot(s=>{menus=migrateMenuCategories(s.docs.map(d=>({id:d.id,...d.data()})));localSave();renderAll()},e=>setStatus("メニュー読込エラー","offline"));
- unsubDays=db.collection("teams").doc(TEAM_ID).collection("days").onSnapshot(s=>{days={};s.docs.forEach(d=>days[d.id]=normalizeDay(d.data()));localSave();loadDay(el("dailyDate").value);loadWeek();loadMonth();renderAll()},e=>setStatus("練習読込エラー","offline"));
+ unsubDays=db.collection("teams").doc(TEAM_ID).collection("days").onSnapshot(s=>{
+  days={};s.docs.forEach(d=>days[d.id]=normalizeDay(d.data()));localSave();
+  if(!dailyDirty)loadDay(el("dailyDate").value);
+  if(!weekDirty)loadWeek();
+  if(!monthDirty)loadMonth();
+  renderAll();
+ },e=>setStatus("練習読込エラー","offline"));
 }
 
 async function syncStarterMenus(){
- const localIds=new Set(menus.map(m=>m.id));
- const localNames=new Set(menus.map(m=>m.name));
- const localMissing=STARTER_MENUS.filter(m=>!localIds.has(m.id) && !localNames.has(m.name));
-
- if(localMissing.length){
-  menus=[...menus,...structuredClone(localMissing)];
-  localSave();
-  renderAll();
- }
-
- if(cloud && user){
-  const snap=await db.collection("teams").doc(TEAM_ID).collection("menus").get();
-  const cloudIds=new Set(snap.docs.map(d=>d.id));
-  const cloudNames=new Set(snap.docs.map(d=>d.data().name));
-  const missing=STARTER_MENUS.filter(m=>!cloudIds.has(m.id) && !cloudNames.has(m.name));
-
-  if(missing.length){
-   const batch=db.batch();
-   missing.forEach(m=>{
-    const ref=db.collection("teams").doc(TEAM_ID).collection("menus").doc(m.id);
-    batch.set(ref,{...m,updatedBy:user.email,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-   });
-   await batch.commit();
-   markSaved(`${missing.length}件のメニューを追加`);
-  }
- }
+ // 初期導入時だけ登録。削除した標準メニューを次回ログインで復活させない。
+ if(!cloud||!user||!canEditApp())return;
+ const snap=await db.collection("teams").doc(TEAM_ID).collection("menus").limit(1).get();
+ if(!snap.empty)return;
+ const batch=db.batch();
+ STARTER_MENUS.forEach(m=>{
+  const ref=db.collection("teams").doc(TEAM_ID).collection("menus").doc(m.id);
+  batch.set(ref,{...m,updatedBy:user.email,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+ });
+ await batch.commit();
+ markSaved(`${STARTER_MENUS.length}件の初期メニューを登録`);
 }
 
 async function init(){
@@ -1420,7 +1414,18 @@ async function init(){
  if(!configured()){setStatus("未接続・端末保存","offline");return}
  try{
   firebase.initializeApp(window.FIREBASE_CONFIG);auth=firebase.auth();db=firebase.firestore();cloud=true;
-  auth.onAuthStateChanged(u=>{user=u;if(u){el("login").classList.add("hidden");el("logout").style.display="";setStatus("リアルタイム接続","online");el("savestatus").textContent=u.email;loadCurrentRole();startRealtime();syncStarterMenus()}else{currentRole=null;el("login").classList.remove("hidden");el("logout").style.display="none";setStatus("ログイン待ち","")}})
+  auth.onAuthStateChanged(async u=>{
+   user=u;
+   if(u){
+    el("login").classList.add("hidden");el("logout").style.display="";setStatus("権限確認中","");el("savestatus").textContent=u.email;
+    await loadCurrentRole();
+    startRealtime();
+    try{await syncStarterMenus()}catch(e){console.error("starter menu sync error",e)}
+    setStatus("リアルタイム接続","online");
+   }else{
+    currentRole=null;applyRoleUI();el("login").classList.remove("hidden");el("logout").style.display="none";setStatus("ログイン待ち","");
+   }
+  })
  }catch(e){console.error(e);setStatus("接続エラー","offline")}
 }
 el("loginBtn").onclick=async()=>{

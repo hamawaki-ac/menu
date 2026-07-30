@@ -1243,13 +1243,16 @@ function fitPrintPageToA4(page){
 }
 function prepareOnePagePrint(){
  cleanupOnePagePrint();
+ const selected=el("todayDate")?.value;
+ const day=selected?days[selected]:null;
+ if(!selected||!dayHasContent(day))return false;
  const content=el("todayContent");
- if(!content)return;
+ if(!content)return false;
 
  const source=document.createElement("div");
  source.innerHTML=content.innerHTML;
  const majors=source.querySelectorAll(".today-major");
- if(majors.length<2)return;
+ if(majors.length<2)return false;
 
  const makePage=(major,index)=>{
   const page=document.createElement("section");
@@ -1285,6 +1288,7 @@ function prepareOnePagePrint(){
  root.querySelectorAll(".print-page").forEach(fitPrintPageToA4);
  root.style.position="static";
  root.style.left="auto";
+ return true;
 }
 function cleanupOnePagePrint(){
  const root=document.getElementById("printRoot");
@@ -1317,16 +1321,35 @@ window.showTodayDate=date=>{el("todayDate").value=date;renderToday();scrollTo({t
 function renderToday(){
  const selected=el("todayDate").value;
  el("todayContent").innerHTML=dayHTML(selected,days[selected]);
+ const printable=dayHasContent(days[selected]);
+ const printBtn=el("printDay");
+ if(printBtn){
+  printBtn.disabled=!printable;
+  printBtn.title=printable?"この日のメニューを印刷":"未作成の日は印刷できません";
+ }
  const list=Object.keys(days).filter(d=>dayHasContent(days[d])).sort();
  el("dayList").innerHTML=list.length?list.map(d=>compactDayCard(d,days[d])).join(""):`<div class="empty">入力済みの日はありません</div>`;
  applyRoleUI();
 }
 window.openDay=d=>{if(!canEditApp())return;el("dailyDate").value=d;loadDay(d);nav("daily")}
 el("editDay").onclick=()=>openDay(el("todayDate").value);el("todayDate").onchange=renderToday;el("printDay").onclick=()=>{
- prepareOnePagePrint();
- setTimeout(()=>window.print(),350);
+ const selected=el("todayDate").value;
+ if(!dayHasContent(days[selected])){
+  alert(`${fmt(selected)}は未作成のため印刷できません。入力済みの日を「表示」してから印刷してください。`);
+  return;
+ }
+ if(!prepareOnePagePrint()){
+  alert("印刷データを作成できませんでした。画面を再読み込みして、もう一度お試しください。");
+  return;
+ }
+ requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(()=>window.print(),120)));
 };
-window.addEventListener("beforeprint",()=>{if(!document.getElementById("printRoot"))prepareOnePagePrint()});
+window.addEventListener("beforeprint",()=>{
+ if(!document.getElementById("printRoot")){
+  const selected=el("todayDate")?.value;
+  if(selected&&dayHasContent(days[selected]))prepareOnePagePrint();
+ }
+});
 window.addEventListener("afterprint",cleanupOnePagePrint);
 
 function renderMenus(){

@@ -988,6 +988,15 @@ header,
 </section>
 
 <section id="v-menus" class="view">
+ <div class="panel viewer-hide" id="profileNamePanel">
+  <h2>ユーザー表示名設定</h2>
+  <p class="muted" style="margin-top:-6px">保存者・更新者・ログイン表示に使う名前です。例：飯降コーチ</p>
+  <div class="grid2">
+   <div class="field"><label>表示名</label><input id="profileDisplayName" maxlength="40" placeholder="例：飯降コーチ"></div>
+   <div class="field"><label>ログインメール（変更不可）</label><input id="profileEmail" disabled></div>
+  </div>
+  <div class="actions"><button id="saveProfileName" class="btn primary">表示名を保存</button></div>
+ </div>
  <div class="panel"><h2 id="formTitle">メニュー登録・編集</h2><p class="muted" style="margin-top:-6px">種類を選ぶだけで、前半・本練習・後半の適切な欄に表示されます。</p><input id="editId" type="hidden">
   <div class="grid2">
    <div>
@@ -1039,7 +1048,7 @@ const SECTIONS=[
 ];
 let menus=[],days={},daily=blankDay(),weekStart=getMonday(todayISO()),weekDraft={},monthCursor=todayISO().slice(0,7),monthDraft={};
 let dailyDirty=false,weekDirty=false,monthDirty=false;
-let db=null,auth=null,user=null,currentRole=null,cloud=false,unsubMenus=null,unsubDays=null;
+let db=null,auth=null,user=null,currentRole=null,currentDisplayName="",memberNameMap={},cloud=false,unsubMenus=null,unsubDays=null;
 
 
 function el(id){return document.getElementById(id)}
@@ -1052,6 +1061,29 @@ function loginIdToEmail(value){
 }
 
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
+function cleanDisplayName(v){
+ return String(v||"").trim().replace(/\s+/g," ").slice(0,40);
+}
+function nameForDisplay(value){
+ const raw=String(value||"").trim();
+ if(!raw)return "";
+ if(memberNameMap[raw])return memberNameMap[raw];
+ if(raw.includes("@"))return raw.split("@")[0];
+ return raw;
+}
+function currentUpdaterName(){
+ return cleanDisplayName(currentDisplayName) || cleanDisplayName(user?.displayName) || nameForDisplay(user?.email) || "更新者未設定";
+}
+function refreshUserText(){
+ const roleLabel=currentRole==="admin"?"管理者":currentRole==="editor"?"編集者":currentRole==="viewer"?"閲覧専用":"";
+ const label=currentUpdaterName();
+ const statusText=el("savestatus");
+ if(statusText && user)statusText.textContent=`${label}${roleLabel?`（${roleLabel}）`:""}`;
+ const emailInput=el("profileEmail");
+ const nameInput=el("profileDisplayName");
+ if(emailInput)emailInput.value=user?.email||"";
+ if(nameInput && document.activeElement!==nameInput)nameInput.value=currentDisplayName||"";
+}
 function cls(cat){return({"全体メニュー":"cat-overall","全体メニュー（前半）":"cat-overall","全体練習メニュー（本練習）":"cat-overall","全体メニュー（後半）":"cat-overall","筋トレメニュー":"cat-strength","短距離メニュー":"cat-sprint","ハードルメニュー":"cat-hurdle","跳躍メニュー":"cat-jump","投擲メニュー":"cat-throw","長距離メニュー":"cat-distance","ドリルメニュー":"cat-drill"})[cat]||""}
 function blankDay(){const sections={};SECTIONS.forEach(s=>sections[s.id]=[]);return{theme:"",notes:"",sections}}
 function normalizeDay(day){
@@ -1115,23 +1147,45 @@ function applyRoleUI(){
   node.style.display=viewer?"none":"";
  });
 
- const statusText=el("savestatus");
- if(statusText && user){
-  const roleLabel=currentRole==="admin"?"管理者":currentRole==="editor"?"編集者":currentRole==="viewer"?"閲覧専用":"";
-  statusText.textContent=`${user.email}${roleLabel?`（${roleLabel}）`:""}`;
- }
+ refreshUserText();
 }
 
 async function loadCurrentRole(){
  if(!db || !user) return;
  try{
-  const member=await db.collection("teams").doc(TEAM_ID).collection("members").doc(user.uid).get();
-  currentRole=member.exists ? member.data().role : null;
+  const membersRef=db.collection("teams").doc(TEAM_ID).collection("members");
+  const member=await membersRef.doc(user.uid).get();
+  const memberData=member.exists?member.data():{};
+  currentRole=memberData.role||null;
+  currentDisplayName=cleanDisplayName(memberData.displayName||memberData.name||user.displayName||"");
+  memberNameMap={};
+  if(user.email && currentDisplayName)memberNameMap[user.email]=currentDisplayName;
+
+  // 管理者は全ユーザーのメール→表示名を読み込み、過去データも名前表示に変換。
+  if(currentRole==="admin"){
+   try{
+    const allMembers=await membersRef.get();
+    allMembers.forEach(doc=>{
+     const data=doc.data()||{};
+     const nm=cleanDisplayName(data.displayName||data.name||"");
+     if(nm){
+      if(data.email)memberNameMap[data.email]=nm;
+      memberNameMap[doc.id]=nm;
+     }
+    });
+   }catch(mapError){
+    console.warn("member name map load skipped",mapError);
+   }
+  }
   applyRoleUI();
+  refreshUserText();
+  renderAll();
  }catch(error){
   console.error("role load error",error);
   currentRole=null;
+  currentDisplayName="";
   applyRoleUI();
+  refreshUserText();
  }
 }
 
@@ -1163,7 +1217,7 @@ el("theme").addEventListener("input",()=>dailyDirty=true);
 el("notes").addEventListener("input",()=>dailyDirty=true);
 
 async function saveDayDoc(date,data){
- data={...normalizeDay(data),updatedBy:user?.email||"local",updatedAtText:new Date().toISOString()};
+ data={...normalizeDay(data),updatedBy:currentUpdaterName(),updatedAtText:new Date().toISOString()};
  if(cloud){
   await db.collection("teams").doc(TEAM_ID).collection("days").doc(date).set({...data,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
  }
@@ -1230,14 +1284,14 @@ function dayHTML(date,day){
   ${day.theme?`<p><b>テーマ：</b>${esc(day.theme)}</p>`:""}
   <div class="today-summary">
    <span>登録メニュー ${totalMenus}件</span>
-   ${day.updatedBy?`<span>更新者 ${esc(day.updatedBy)}</span>`:""}
+   ${day.updatedBy?`<span>更新者 ${esc(nameForDisplay(day.updatedBy))}</span>`:""}
   </div>
   <div class="today-board">
    ${renderMajor("全体練習","overall",overallIds)}
    ${renderMajor("各種目練習","events",eventIds)}
   </div>
   ${day.notes?`<div class="notice" style="margin-top:15px"><b>連絡事項</b><br>${esc(day.notes)}</div>`:""}
-  <p class="muted">最終更新：${esc(day.updatedBy||"")}</p>`;
+  <p class="muted">最終更新：${esc(nameForDisplay(day.updatedBy||""))}</p>`;
 }
 
 function mmToPx(mm){
@@ -1394,7 +1448,7 @@ function menuFormData(){
  return{id:el("editId").value||crypto.randomUUID(),name:el("name").value.trim(),category:el("category").value,detail:el("detail").value.trim(),sets:el("sets").value.trim(),intensity:el("intensity").value.trim(),rest:el("rest").value.trim(),duration:el("duration").value.trim(),target:el("target").value.trim(),caution:el("caution").value.trim()}
 }
 async function saveMenuDoc(m){
- if(cloud)await db.collection("teams").doc(TEAM_ID).collection("menus").doc(m.id).set({...m,updatedBy:user.email,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+ if(cloud)await db.collection("teams").doc(TEAM_ID).collection("menus").doc(m.id).set({...m,updatedBy:currentUpdaterName(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
  const i=menus.findIndex(x=>x.id===m.id);if(i>=0)menus[i]=m;else menus.push(m);localSave();renderAll();markSaved();
 }
 el("saveMenu").onclick=async()=>{if(!canEditApp())return alert("閲覧専用アカウントでは編集できません。");const m=menuFormData();if(!m.name)return alert("メニュー名を入力してください");try{await saveMenuDoc(m);resetMenu();nav("menus");setTimeout(()=>el("menuList").scrollIntoView({behavior:"smooth",block:"start"}),50)}catch(e){console.error(e);alert("メニューの保存に失敗しました。通信状態を確認してください。")}}
@@ -1426,7 +1480,7 @@ el("saveWeek").onclick=async()=>{
   const changed=Object.entries(weekDraft).filter(([date,d])=>dayHasContent(d)||dayHasContent(days[date]));
   if(cloud){
    const batch=db.batch();
-   for(const [date,rawDay] of changed){const d=normalizeDay(rawDay);d.updatedBy=user.email;d.updatedAtText=new Date().toISOString();batch.set(db.collection("teams").doc(TEAM_ID).collection("days").doc(date),{...d,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})}
+   for(const [date,rawDay] of changed){const d=normalizeDay(rawDay);d.updatedBy=currentUpdaterName();d.updatedAtText=new Date().toISOString();batch.set(db.collection("teams").doc(TEAM_ID).collection("days").doc(date),{...d,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})}
    if(changed.length)await batch.commit();
   }
   changed.forEach(([date,rawDay])=>days[date]=normalizeDay(rawDay));
@@ -1475,7 +1529,7 @@ el("saveMonth").onclick=async()=>{
   const changed=Object.entries(monthDraft).filter(([date,d])=>dayHasContent(d)||dayHasContent(days[date]));
   if(cloud){
    const batch=db.batch();
-   changed.forEach(([date,rawDay])=>{const d=normalizeDay(rawDay);d.updatedBy=user.email;d.updatedAtText=new Date().toISOString();batch.set(db.collection("teams").doc(TEAM_ID).collection("days").doc(date),{...d,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})});
+   changed.forEach(([date,rawDay])=>{const d=normalizeDay(rawDay);d.updatedBy=currentUpdaterName();d.updatedAtText=new Date().toISOString();batch.set(db.collection("teams").doc(TEAM_ID).collection("days").doc(date),{...d,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})});
    if(changed.length)await batch.commit();
   }
   changed.forEach(([date,d])=>days[date]=normalizeDay(d));
@@ -1505,11 +1559,34 @@ async function syncStarterMenus(){
  const batch=db.batch();
  STARTER_MENUS.forEach(m=>{
   const ref=db.collection("teams").doc(TEAM_ID).collection("menus").doc(m.id);
-  batch.set(ref,{...m,updatedBy:user.email,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+  batch.set(ref,{...m,updatedBy:currentUpdaterName(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
  });
  await batch.commit();
  markSaved(`${STARTER_MENUS.length}件の初期メニューを登録`);
 }
+
+el("saveProfileName").onclick=async()=>{
+ if(!user || !db)return alert("ログイン情報を確認できません。");
+ if(!canEditApp())return alert("閲覧専用アカウントでは変更できません。");
+ const displayName=cleanDisplayName(el("profileDisplayName").value);
+ if(!displayName)return alert("表示名を入力してください。");
+ try{
+  const ref=db.collection("teams").doc(TEAM_ID).collection("members").doc(user.uid);
+  await ref.set({
+   displayName,
+   email:user.email||"",
+   updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+  },{merge:true});
+  currentDisplayName=displayName;
+  if(user.email)memberNameMap[user.email]=displayName;
+  refreshUserText();
+  renderAll();
+  alert("表示名を保存しました。");
+ }catch(error){
+  console.error("display name save error",error);
+  alert("表示名の保存に失敗しました。Firestoreの権限設定を確認してください。");
+ }
+};
 
 async function init(){
  menus=migrateMenuCategories(JSON.parse(localStorage.getItem("coachMenus")||"[]"));days=normalizeDaysMap(JSON.parse(localStorage.getItem("coachDays")||"{}"));if(!menus.length)menus=structuredClone(STARTER_MENUS);
@@ -1520,13 +1597,13 @@ async function init(){
   auth.onAuthStateChanged(async u=>{
    user=u;
    if(u){
-    el("login").classList.add("hidden");el("logout").style.display="";setStatus("権限確認中","");el("savestatus").textContent=u.email;
+    el("login").classList.add("hidden");el("logout").style.display="";setStatus("権限確認中","");el("savestatus").textContent="ユーザー情報を確認中";
     await loadCurrentRole();
     startRealtime();
     try{await syncStarterMenus()}catch(e){console.error("starter menu sync error",e)}
     setStatus("リアルタイム接続","online");
    }else{
-    currentRole=null;applyRoleUI();el("login").classList.remove("hidden");el("logout").style.display="none";setStatus("ログイン待ち","");
+    currentRole=null;currentDisplayName="";memberNameMap={};applyRoleUI();el("login").classList.remove("hidden");el("logout").style.display="none";setStatus("ログイン待ち","");
    }
   })
  }catch(e){console.error(e);setStatus("接続エラー","offline")}

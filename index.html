@@ -819,6 +819,58 @@ header,
 }
 </style>
 
+
+<style id="entered-band-and-print-accuracy-fix">
+/* 入力済み日程：色付き帯の文字に余白を設け、角を丸くする */
+.entered-day-card{
+  padding:0 !important;
+  overflow:hidden !important;
+  border-radius:16px !important;
+}
+.entered-day-card > .toolbar{
+  margin:0 !important;
+  padding:13px 15px !important;
+  min-height:58px !important;
+  box-sizing:border-box !important;
+  border-radius:15px 15px 0 0 !important;
+  overflow:hidden !important;
+  background:var(--hamawaki-gradient) !important;
+  background-image:var(--hamawaki-gradient) !important;
+}
+.entered-day-card > .toolbar h3{
+  margin:0 0 5px !important;
+  line-height:1.25 !important;
+}
+.entered-day-card > .toolbar .actions{
+  padding-left:10px !important;
+}
+.entered-day-card > .entered-day-groups{
+  margin:0 !important;
+  padding:0 14px 14px !important;
+}
+@media(max-width:650px){
+  .entered-day-card > .toolbar{padding:12px !important;gap:10px !important}
+  .entered-day-card > .entered-day-groups{padding:0 10px 10px !important}
+}
+
+/* 印刷：各論理ページをA4 1枚に固定し、幅は常に印刷可能領域いっぱい */
+@media print{
+  #printRoot .print-page-inner{
+    transform:none !important;
+    zoom:var(--content-scale,1) !important;
+    transform-origin:initial !important;
+    box-sizing:border-box !important;
+  }
+  #printRoot .print-page{
+    overflow:hidden !important;
+  }
+  #printRoot .print-sheet-title,
+  #printRoot .today-major-title{
+    border-radius:2.2mm !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div id="login" class="login hidden">
@@ -1174,22 +1226,18 @@ function fitPrintPageToA4(page){
  const inner=page.querySelector(".print-page-inner");
  if(!inner)return;
 
- // Measure the source content before printing.
  inner.style.setProperty("--content-scale","1");
- inner.style.width="100%";
+ inner.style.setProperty("width","100%","important");
  void inner.offsetHeight;
 
- const maxH=mmToPx(279); // safety margin inside 284 mm physical page
- const h=Math.max(inner.scrollHeight,1);
-
- // Use the full A4 printable width at all times.
- // Only reduce content when its HEIGHT would exceed one sheet.
- let scale=Math.min(1,maxH/h);
+ const maxH=mmToPx(279);
+ const naturalH=Math.max(inner.scrollHeight,1);
+ let scale=Math.min(1,maxH/naturalH);
  if(!Number.isFinite(scale)||scale<=0)scale=1;
- scale=Math.max(0.001,Math.floor(scale*1000)/1000);
+ scale=Math.max(0.20,Math.floor(scale*1000)/1000);
 
+ // Chromiumのzoomで縦だけ縮小し、元幅を逆補正して見た目を用紙幅いっぱいに保つ。
  inner.style.setProperty("--content-scale",String(scale));
- // Compensate the scaled width so the visible result still fills the sheet.
  inner.style.setProperty("width",(100/scale)+"%","important");
  page.dataset.printScale=String(scale);
 }
@@ -1276,7 +1324,7 @@ function renderToday(){
 window.openDay=d=>{if(!canEditApp())return;el("dailyDate").value=d;loadDay(d);nav("daily")}
 el("editDay").onclick=()=>openDay(el("todayDate").value);el("todayDate").onchange=renderToday;el("printDay").onclick=()=>{
  prepareOnePagePrint();
- setTimeout(()=>window.print(),120);
+ setTimeout(()=>window.print(),350);
 };
 window.addEventListener("beforeprint",()=>{if(!document.getElementById("printRoot"))prepareOnePagePrint()});
 window.addEventListener("afterprint",cleanupOnePagePrint);
